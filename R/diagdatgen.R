@@ -1,6 +1,35 @@
 
 
+#' Diagonal Data generation
+#'
+#' @param msT The size of each Y_i, i.e., (m_1, ..., m_p).
+#' @param hsT The size of each X_i, i.e., (h_1, ..., h_l).
+#' @param bt The Beta vector of size hsT x msT, created from a single value (??)
+#' @param nn sample size/prod(hsT) (??)
+#' @param sig2t 
+#' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
+#' Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+#' "N" for general covariance with element (1,1) equal to 1.
+#' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
+#' @returns A list containing the following elements: \cr\cr
+#' Yall - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
+#' The last dimension must match the last dimension of Xall. \cr\cr
+#' Xall Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
+#' The last dimension must match the last dimension of Yall. \cr\cr
+#' SST - The list of matrices [S_1 ,.., S_p], S_i is of size m_i x m_i. \cr\cr
 #' @export
+#' @examples
+#' # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
+#' set.seed(1234)
+#' RmsT <- 6:9
+#' RhsT <- 3:5
+#' Rbt <- 100
+#' Rnn <- 2
+#' Rcorrs = c("AR(1)","EQC","MA(1)","N")
+#' Rsig2t <- 20
+#' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
+#' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @references \url{https://arxiv.org/abs/2012.10249}
 diagdat_sim <- function(msT,hsT,bt,nn,sig2t,corrs){
 
   #size of response

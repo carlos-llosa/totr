@@ -3,7 +3,65 @@
 
 # Tensor-on-Tensor Regression where B has no format
 # S has two different structures: diagonal (IndpS) and Kronecker-separable (KronS)
+#'
+#' Tensor-on-tensor regression
+#'  Y_i = < X_i | B > + E_i
+#' with kronecker-separable covariance
+#' Var(vec(E_i)) = \\sigma^2 \\otimes_k S_k
+#' The size of the ith tensor covariate X_i is h_1 x .. x h_p,
+#' The size of the ith tensor response Y_i is m_1 x .. x m_p,
+#' the size of the regression coefficient B is of size h_1 x .. x h_l x m_1 x .. x m_p,
+#' and i=1,...,n.\cr
+#' the matrix M_k is of size h_k x m_k,
+#' and matrix S_k is positive definite of size m_k x m_k and is restricted to (1,1) element equal to 1.
+#'
+#' Convergence is achieved when the relative difference in snorm(B) + snorm(S) is less than err.
+#' snorm(Y) here means norm(Y)/\\sqrt(size of Y) \cr
+#' Here the number of dimensions of Y and X must match. If they don't, then one can create dummy dimensions of size 1
+#' to have them match using dim(Xall) <- c(1,dim(Xall))
+#'
+#' @param Yall Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
+#' The last dimension must match the last dimension of Xall.
+#' @param Xall Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
+#' The last dimension must match the last dimension of Yall.
+#' @param it maximum number of iterations.
+#' @param err relative error used to assess convergence.
+#' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
+#' Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+#' "N" for general covariance with element (1,1) equal to 1.
+#' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
+#' CHANGE THIS ONE!!
+#' @return A list containing the following elements: \cr\cr
+#' B -  the estimated coefficient B. \cr\cr
+#' sig2 - the estimate of \\sigma^2. \cr\cr
+#' covs - a list with the estimated matrices S_1 ,.., S_p. \cr\cr
+#' allconv - a vector with all the convergence criteria.(????) \cr\cr
+#' allik - a vector with all the loglikelihoods, should be monotone increasing.(????) \cr\cr
+#' it - the number of iterations taken \cr\cr
 #' @export
+#' @examples
+#' # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
+#' set.seed(1234)
+#' RmsT <- 6:9
+#' RhsT <- 3:5
+#' Rbt <- 100
+#' Rnn <- 2
+#' Rcorrs = c("AR(1)","EQC","MA(1)","N")
+#' Rsig2t <- 20
+#' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
+#' dim(dat$Xall) <- c(1,dim(dat$Xall))
+#' fit <- ToT_unformat(Yall = dat$Yall,Xall = dat$Xall,corrs = Rcorrs)
+#' par(mfrow = c(1,2))
+#' hist(fit$B,main = "estimates in B (true in blue)")
+#' abline(v= Rbt,col = "blue",lwd=3)
+#' plot(ts(fit$allik),main = "loglikelihood")
+#' par(mfrow = c(1,1))
+#' covars <- rbind("true" = c(Rsig2t,sapply(dat$SST,function(x)x[2,1])),
+#'                 "est" = c(fit$sig2,sapply(fit$covs,function(x)x[2,1])))
+#' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
+#' covars
+#' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @references \url{https://arxiv.org/abs/2012.10249}
 ToT_unformat <- function(Yall,Xall,it = 100,corrs = "N",err = 1e-8){
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
