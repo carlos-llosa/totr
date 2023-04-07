@@ -54,7 +54,7 @@
 #' par(mfrow = c(1,2))
 #' hist(fit$B,main = "estimates in B (true in blue)")
 #' abline(v= Rbt,col = "blue",lwd=3)
-#' plot(ts(fit$allik),main = "loglikelihood")
+#' # plot(ts(fit$allik),main = "loglikelihood")
 #' par(mfrow = c(1,1))
 #' covars <- rbind("true" = c(Rsig2t,sapply(dat$SST,function(x)x[2,1])),
 #'                 "est" = c(fit$sig2,sapply(fit$covs,function(x)x[2,1])))

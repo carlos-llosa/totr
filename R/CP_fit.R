@@ -43,6 +43,8 @@
 #' allik - a vector with all the loglikelihoods, should be monotone increasing. \cr\cr
 #' it - the number of iterations taken \cr\cr
 #' @export
+#' @importFrom stats optimize rWishart rnorm runif toeplitz uniroot
+#' @importFrom utils tail
 #' @examples
 #' # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
 #' set.seed(1234)

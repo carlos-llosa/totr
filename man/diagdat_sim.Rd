@@ -11,11 +11,11 @@ diagdat_sim(msT, hsT, bt, nn, sig2t, corrs)
 
 \item{hsT}{The size of each X_i, i.e., (h_1, ..., h_l).}
 
-\item{bt}{The Beta vector of size hsT x msT, created from a single value (??)}
+\item{bt}{The value generating the Beta tensor of size hsT x msT}
 
 \item{nn}{sample size/prod(hsT) (??)}
 
-\item{sig2t}{}
+\item{sig2t}{Check this (??)}
 
 \item{corrs}{Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
 Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
@@ -43,6 +43,9 @@ Rnn <- 2
 Rcorrs = c("AR(1)","EQC","MA(1)","N")
 Rsig2t <- 20
 dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
+dim(dat$Xall)
+dim(dat$Yall)
+dim(dat$SST[[1]])
 }
 \references{
 \url{https://arxiv.org/abs/2012.10249}
