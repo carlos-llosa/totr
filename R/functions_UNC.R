@@ -74,7 +74,10 @@ ToT_unformat <- function(Yall,Xall,it = 100,corrs = "N",err = 1e-8){
   B <- aperm(B,c(p+1,1:p))
   dim(B) <- c(hs,ms)
   res <- amprod(Yall,diag(n) - tcrossprod(sol$v),p+1)
-  fit1 <- MLE_tensnorm(res,it = it,corrs = corrs,err =err)
+  fit1 <- MLE_tensnorm(res,it = it,corrs = corrs,err =err)   
+  # CHECK: In the comment for this function, it is written #MLE algorithm with covariances set to AR(1) autocorrelations 
+  # Then how can it accomodate other type cvariates???
+  # It seems that MLE_transform has all the cases. Still check!
   fit2 <- apply(res^2,1:p,mean)
   return(list(B=B,IndpS = fit2,KronS = fit1))
 }

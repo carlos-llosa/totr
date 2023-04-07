@@ -96,7 +96,7 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
     # this is performed efficiently by avoiding matrix products
     res <- NULL
     for(r in 1:R){
-      Ns <- Reduce("%o%",lapply(Gs,function(x)x[,r]))
+      Ns <- Reduce("%o%",lapply(Gs,function(x)x[,r]))                 # problem if hst <- 1:3
       res <- rbind(res,apply(X,length(dim(X)),function(x)sum(x*Ns)))
     }
     return(res)

@@ -4,7 +4,7 @@
 .Ruserdata
 
 Test_tensorA.R
-test_totr_1.R
+test_totr_*.R
 Subrata_info.md
 totr.Rproj
 .Rbuildignore
