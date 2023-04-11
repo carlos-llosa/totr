@@ -50,13 +50,13 @@ The default ARMA order is (1, 1).}
 }
 \value{
 A list containing the following elements: \cr\cr
-B -  the estimated coefficient B. \cr\cr
-CP - A list with the estimated L_1 ,.., L_l in the list Ls and estimated M_1 ,.., M_p in the list Ms.\cr\cr
-sig2 - the estimate of \\sigma^2. \cr\cr
-covs - a list with the estimated matrices S_1 ,.., S_p. \cr\cr
-allconv - a vector with all the convergence criteria. \cr\cr
-allik - a vector with all the loglikelihoods, should be monotone increasing. \cr\cr
-it - the number of iterations taken \cr\cr
+\code{B} -  the estimated coefficient B. \cr\cr
+C\code{P} - A list with the estimated L_1 ,.., L_l in the list Ls and estimated M_1 ,.., M_p in the list Ms.\cr\cr
+\\code{sig2} - the estimate of \\sigma^2. \cr\cr
+\code{covs} - a list with the estimated matrices S_1 ,.., S_p. \cr\cr
+\code{allconv} - a vector with all the convergence criteria. \cr\cr
+\code{allik} - a vector with all the loglikelihoods, should be monotone increasing. \cr\cr
+\code{it} - the number of iterations taken \cr\cr
 }
 \description{
 Tensor-on-tensor regression

@@ -14,11 +14,11 @@
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
 #' @returns A list containing the following elements: \cr\cr
-#' Yall - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
+#' \code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
 #' The last dimension must match the last dimension of Xall. \cr\cr
-#' Xall Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
+#' \code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
 #' The last dimension must match the last dimension of Yall. \cr\cr
-#' SST - The list of matrices [S_1 ,.., S_p], S_i is of size m_i x m_i. \cr\cr
+#' \code{SST} - The list of matrices [S_1 ,.., S_p], S_i is of size m_i x m_i. \cr\cr
 #' @export
 #' @examples
 #' # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
