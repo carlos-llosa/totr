@@ -4,7 +4,16 @@
 \alias{CP_normal}
 \title{Tensor-on-Tensor Regression with Kronecker Separable Covariance and CP Format Coefficient}
 \usage{
-CP_normal(Yall, Xall, R, it = 100, err = 1e-08, init = NULL, corrs = "N")
+CP_normal(
+  Yall,
+  Xall,
+  R,
+  it = 100,
+  err = 1e-08,
+  init = NULL,
+  corrs = "N",
+  arma_param = NULL
+)
 }
 \arguments{
 \item{Yall}{Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
@@ -26,9 +35,18 @@ If init = NULL then the elements in init$covs will be initiated from the TVN mod
 and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.}
 
 \item{corrs}{Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
 If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.}
+
+\item{arma_param}{A list of size length(dim(Yall)), each of which contains the
+ARMA parameter orders (p, q) for that corresponding mode.
+p is the AR parameter order and q is the MA parameter order
+If some other mode has some other kind of correlation structure
+and you still want to specify the ARMA orders,
+you can input a list of size p with otheer cases as NULL.
+The default ARMA order is (1, 1).}
 }
 \value{
 A list containing the following elements: \cr\cr

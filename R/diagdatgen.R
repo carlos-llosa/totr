@@ -1,6 +1,8 @@
 
 
 #' Diagonal Data generation
+#' 
+#' @rdname diagdat_sim
 #'
 #' @param msT The size of each Y_i, i.e., (m_1, ..., m_p).
 #' @param hsT The size of each X_i, i.e., (h_1, ..., h_l).

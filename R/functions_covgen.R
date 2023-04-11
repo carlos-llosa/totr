@@ -87,7 +87,7 @@ covARMA <- function(ar, ma, m){
   #Generates the m x m ARMA(p, q)-correlation matrix with coef ar and ma
   # Notice that the MA coeffieicnt is not usual in previous covarma function
   # Here it is according to Brockwell and Davis
-  tmp <- ARMAacf(ar, ma, lag.max = m)
+  tmp <- ARMAacf(ar, ma, lag.max = m-1)
   toeplitz(tmp)
 }
 arma <- function(m, sig2, Sq, p, q, init_par = NULL) {

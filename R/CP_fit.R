@@ -31,9 +31,17 @@
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
 #' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-#' Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+#' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
+#' @param arma_param A list of size length(dim(Yall)), each of which contains the
+#' ARMA parameter orders (p, q) for that corresponding mode.
+#' p is the AR parameter order and q is the MA parameter order
+#' If some other mode has some other kind of correlation structure
+#' and you still want to specify the ARMA orders,
+#' you can input a list of size p with otheer cases as NULL.
+#' The default ARMA order is (1, 1).
 #' @return A list containing the following elements: \cr\cr
 #' B -  the estimated coefficient B. \cr\cr
 #' CP - A list with the estimated L_1 ,.., L_l in the list Ls and estimated M_1 ,.., M_p in the list Ms.\cr\cr
@@ -67,7 +75,8 @@
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
 #' @references \url{https://arxiv.org/abs/2012.10249}
-CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
+CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
+                      corrs = "N", arma_param = NULL) {
   #setting up dimensions
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
@@ -80,13 +89,25 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
 
   if(length(corrs) == 1) corrs <- rep(corrs,p)
   Sgen <- as.list(1:p)
+  if_arma <- rep(FALSE, p)
+  if (is.null(arma_param)) arma_param <- as.list(1:p)
+
   for(k in 1:p){
+    if (corrs[k] == "ARMA" || corrs[k] == "ARMA(p,q)" || corrs[k] == "ARMA(p, q)") {
+      if_arma[k] <- TRUE
+    }
+
     if(corrs[k] == "AR(1)"){
       Sgen[[k]] <- ar1
     } else if(corrs[k] == "EQC"){
       Sgen[[k]] <- eqc
     } else if(corrs[k] == "MA(1)"){
       Sgen[[k]] <- ma1
+    } else if (if_arma[k]) {
+      Sgen[[k]] <- arma
+      if(is.null(arma_param[[k]])) {
+        arma_param[[k]] <- c(1, 1)
+      }
     } else Sgen[[k]] <- ADJUST
   }
 
@@ -160,7 +181,11 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
       #M and S
       Mr <- Sqrprev %*% Yall %*% t(GallR) %*% ginvS(GallR2)
       SR <- tcrossprod(Sqrprev %*% Yall) - Mr %*% GallR2 %*% t(Mr)
-      STTs[[1]] <- Styp(Sgen[[1]](n,sig2,SR))
+      if (if_arma[k]) {
+        STTs[[1]] <- Styp(arma(n, sig2, SR, arma_param[[k]][1], arma_param[[k]][2]))
+      } else {
+        STTs[[1]] <- Styp(Sgen[[1]](n,sig2,SR))
+      }
       #sig2 and update list, Yall
       Yall <- STTs[[1]]$isqr %*% Sqrprev %*% Yall
       sig2 <- sum(STTs[[1]]$inv*SR)/mn
@@ -177,7 +202,11 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
         Mr <- apply(apply(t(1:n),2,function(i)GallR[,i]*Yz[,,i]),1,sum)
         Mr <- Sqrprev %*% t(array(Mr,c(R,ms[k]))) %*% ginvS(HR)
         SR <- Sqrprev %*% sqmode(Yall,k) %*% Sqrprev - Mr %*% HR %*% t(Mr)
-        STTs[[k]]  <- Styp(Sgen[[k]](n*prod(ms[-k]),sig2,SR))
+        if (if_arma[k]) {
+          STTs[[k]]  <- Styp(arma(n*prod(ms[-k]), sig2, SR, arma_param[[k]][1], arma_param[[k]][2]))
+        } else {
+          STTs[[k]]  <- Styp(Sgen[[k]](n*prod(ms[-k]),sig2,SR))
+        }
         #update lists, Yall and s2
         Yall <- amprod(Yall,STTs[[k]]$isqr %*% Sqrprev,k)
         sig2 <- sum(STTs[[k]]$inv*SR)/mn
