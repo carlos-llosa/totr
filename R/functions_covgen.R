@@ -81,3 +81,43 @@ ar1 <- function(m,sig2,Sq){
   return(covAR1(par1,mm))
 }
 
+#' @importFrom stats optim ARMAacf
+covARMA <- function(ar, ma, m){
+  if(m == 1) return(matrix(1, 1, 1))
+  #Generates the m x m ARMA(p, q)-correlation matrix with coef ar and ma
+  # Notice that the MA coeffieicnt is not usual in previous covarma function
+  # Here it is according to Brockwell and Davis
+  tmp <- ARMAacf(ar, ma, lag.max = m)
+  toeplitz(tmp)
+}
+arma <- function(m, sig2, Sq, p, q, init_par = NULL) {
+  # For a squre matrix Sq finds the
+  # ARMA(p, q) matrix Minimizer of  m(log(det(A))) + tr(Sq*A^{-1})/sig2
+  # where A is the correlation matrix of the process
+  # Added parameters p and q and you can put initial parameter
+  #
+  ## Check whether there exists closed form!
+  ## But not sure as MA does not seem to have a close form (?)
+  mm <- ncol(Sq)
+  if (mm == 1) {
+    return(matrix(1, 1, 1))
+  } else {
+    minlik <- function(arma_par){
+      # negative likelihood of an ARMA(1) process
+      ar_par <- arma_par[1:p]
+      ma_par <- arma_par[p + (1:1)]
+      R <- chol(covARMA(ar_par, ma_par, mm))
+      ldA <- 2 * sum(log(diag(R)))      # log(det(A)) from cholesky
+      Ai <- chol2inv(R)                 # inverse from cholesky
+      return(m*ldA + sum(Ai* Sq)/sig2)  # tr(AB) has closed form sum(A*B)
+    }
+  }
+  if(is.null(init_par)) init_par <- c(rep(0.0, p), rep(0.0, q))
+  par1 <- optim(minlik, method="L-BFGS-B",
+                lower = rep(-1 + 1e-5, p + q),
+                # lower value of MA changed due to the reparametrization
+                upper = rep(1 - 1e-5, p + q))$minimum
+  ar_par <- par1[1:p]
+  ma_par <- par1[p + (1:1)]
+  return(covARMA(ar_par, ma_par, mm))
+}
