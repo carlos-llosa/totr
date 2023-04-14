@@ -31,9 +31,17 @@
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
 #' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-#' Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+#' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
+#' @param arma_param A list of size length(dim(Yall)), each of which contains the
+#' ARMA parameter orders (p, q) for that corresponding mode.
+#' p is the AR parameter order and q is the MA parameter order
+#' If some other mode has some other kind of correlation structure
+#' and you still want to specify the ARMA orders,
+#' you can input a list of size p with otheer cases as NULL.
+#' The default ARMA order is (1, 1).
 #' @return A list containing the following elements: \cr\cr
 #' B -  the estimated coefficient B. \cr\cr
 #' OP - A list with the estimated M_1 ,.., M_p.\cr\cr
@@ -66,24 +74,38 @@
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
 #' @references \url{https://arxiv.org/abs/2012.10249}
-OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N"){
+OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", arma_param = NULL){
   #setting up dimensions
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
   if(dim(Xall)[l+1] != dim(Yall)[p+1]) stop("sample size of X and Y do not match")
   n <- dim(Yall)[p+1]
+  
   #setting up correlations types
   if(length(corrs) == 1) corrs <- rep(corrs,p)
   Sgen <- as.list(1:p)
+  if_arma <- rep(FALSE, p)
+  if (is.null(arma_param)) arma_param <- as.list(1:p)
+
   for(k in 1:p){
+    if (corrs[k] == "ARMA" || corrs[k] == "ARMA(p,q)" || corrs[k] == "ARMA(p, q)") {
+      if_arma[k] <- TRUE
+    }
+
     if(corrs[k] == "AR(1)"){
       Sgen[[k]] <- ar1
     } else if(corrs[k] == "EQC"){
       Sgen[[k]] <- eqc
     } else if(corrs[k] == "MA(1)"){
       Sgen[[k]] <- ma1
+    } else if (if_arma[k]) {
+      Sgen[[k]] <- arma
+      if(is.null(arma_param[[k]])) {
+        arma_param[[k]] <- c(1, 1)
+      }
     } else Sgen[[k]] <- ADJUST
   }
+
   #setting up dimensions (very important for tensor algebra, see package tensorA)
   mdims <- dim(Yall)
   names(mdims) <- c(paste0("m",1:p),"n")
@@ -133,7 +155,11 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N"){
       S <- tcrossprod(Yd) - M %*% Xd2 %*% t(M)
       #save them and sig2
       if(k != p) M <- M/norm(M)
+      if (if_arma[k]) {
+        Stypa[[k]]  <- Styp(arma(prod(mdims[-k]), sig2, S, arma_param[[k]][1], arma_param[[k]][2]))
+      } else {
       Stypa[[k]] <- Styp(Sgen[[k]](prod(mdims[-k]), sig2, S))
+      }
       MSi[[k]]   <- Stypa[[k]]$isqr %*% M
       Ms[[k]]    <- M
       Yall       <- amprod(Yall,Stypa[[k]]$isqr%*%Sqrprev,k)
