@@ -32,7 +32,7 @@ If init = NULL then the elements in init$covs will be initiated from the TVN mod
 and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.}
 
 \item{corrs}{Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
 If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.}

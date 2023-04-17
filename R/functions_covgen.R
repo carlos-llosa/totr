@@ -1,4 +1,4 @@
-
+DEBUG <- 0
 
 #ADJUST procedure as in Glanz and Carvalho 2018
 ADJUST <- function(n,sig2,S){
@@ -105,19 +105,76 @@ arma <- function(m, sig2, Sq, p, q, init_par = NULL) {
     minlik <- function(arma_par){
       # negative likelihood of an ARMA(1) process
       ar_par <- arma_par[1:p]
-      ma_par <- arma_par[p + (1:1)]
-      R <- chol(covARMA(ar_par, ma_par, mm))
-      ldA <- 2 * sum(log(diag(R)))      # log(det(A)) from cholesky
-      Ai <- chol2inv(R)                 # inverse from cholesky
-      return(m*ldA + sum(Ai* Sq)/sig2)  # tr(AB) has closed form sum(A*B)
+      ma_par <- arma_par[p + (1:q)]
+      ## In this range with p, q > 1, there can be cases with 
+      ## unidentifiability and non-psd matrices
+      ## Basically, in the `odd region`, when the error occurs, 
+      ## there L-BFGS_B takes an lower/upper parameter value and
+      ## small shift from that just gives the same value and 
+      ## Eventually it gives the original value.  
+      # 
+      ## Check valid or not (ARMA(1,1) is probably valid within the range)
+      ## Still the optimizations can have numerical problems, be aware of that!
+      #
+      ## Try another optimization method with this trycatch. 
+      tryCatch({
+        tmp_mat <- covARMA(ar_par, ma_par, mm)
+        R <- chol(tmp_mat)
+        ldA <- 2 * sum(log(diag(R)))      # log(det(A)) from cholesky
+        Ai <- chol2inv(R)                 # inverse from cholesky
+        return(m*ldA + sum(Ai* Sq)/sig2)  # tr(AB) has closed form sum(A*B)
+      },
+      error=function(e){
+        print("Cholesky problem")
+        print(arma_par)
+        return(1e+60)
+      }
+      )
     }
   }
-  if(is.null(init_par)) init_par <- c(rep(0.0, p), rep(0.0, q))
-  par1 <- optim(minlik, method="L-BFGS-B",
-                lower = rep(-1 + 1e-5, p + q),
-                # lower value of MA changed due to the reparametrization
-                upper = rep(1 - 1e-5, p + q))$minimum
+  if(is.null(init_par)) {
+    init_par <- rep(0.00, as.integer(p + q))
+  }
+  # par1 <- optim(init_par, minlik, method="L-BFGS-B",
+  #               lower = rep(-1 + 1e-5, p + q), # MA lower value changed due to the reparametrization
+  #               upper = rep(1 - 1e-5, p + q))$par
+  # if(DEBUG) print(par1)
+  # # Either change the upper and lower values or do something else. 
+  # # Numerically the optimization might be unstable when p, q > 1
+  # # Or have some special bounds when p, q > 1 
+  # #             user system elapsed
+  # #  TK_normal 7.474  0.086   7.588
+  # #  TR_normal 6.499  0.107   6.635
+
+  # Check this
+  par1 <- optim(init_par, minlik)$par
+  if(DEBUG) print(par1)
+  #             user system elapsed
+  #  TK_normal 7.583  0.103   7.717
+  #  TR_normal 6.669  0.073   6.769
+
+  par_old <- par1
+  par1 <- optim(par_old, minlik, method="L-BFGS-B",
+              lower = pmax(par_old - 0.1, -0.9999), upper = pmin(par_old + 0.1, 0.9999))$par
+  # This joined not giving too good results
+
+
   ar_par <- par1[1:p]
-  ma_par <- par1[p + (1:1)]
+  ma_par <- par1[p + (1:q)]
+  # print('ar_par')
+  # print(ar_par)
+  # print('ma_par')
+  # print(ma_par)
   return(covARMA(ar_par, ma_par, mm))
 }
+
+## Test
+# tmp1 <- covARMA(0.9, 0.9, 10)
+# tmp2 <- arma(10, 1/10, tmp1, 1, 1)
+# tmp1[1,1:4]
+# tmp2[1,1:4]
+
+# tmp1 <- covARMA(c(0.9, 0.2), 0.9, 10)
+# tmp2 <- arma(10, 1/10, tmp1, 2, 1)
+# tmp1[1,1:4]
+# tmp2[1,1:4]

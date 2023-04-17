@@ -14,11 +14,11 @@ so that it is of size h_1 x .. x h_l x n.}
 
 \item{Bt}{The coefficient array of size h_1 x .. x h_l x m_1 x .. x m_p}
 
-\item{sig2t}{Variance}
+\item{sig2t}{General variance}
 
 \item{corrs}{Character vector of size p inidicating the
 types of covariance matrices desired for S_1 ,.., S_p.
-Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
 If corrs is of size 1, then S_1 ,.., S_p will all have the

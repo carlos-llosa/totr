@@ -34,7 +34,7 @@
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
 #' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-#' Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 #' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
@@ -62,7 +62,7 @@
 #' RhsT <- 3:5
 #' Rbt <- 100
 #' Rnn <- 2
-#' Rcorrs = c("AR(1)","EQC","MA(1)","N")
+#' Rcorrs = c("AR(1)","EQC","ARMA","N")
 #' Rsig2t <- 20
 #' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
 #' pdims <- c(2,2,2,2,2,2,2)
@@ -95,6 +95,8 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   for(k in 1:p){
     if (corrs[k] == "ARMA" || corrs[k] == "ARMA(p,q)" || corrs[k] == "ARMA(p, q)") {
       if_arma[k] <- TRUE
+    } else {
+      arma_param[[k]] <- NA
     }
 
     if(corrs[k] == "AR(1)"){
@@ -105,7 +107,7 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
       Sgen[[k]] <- ma1
     } else if (if_arma[k]) {
       Sgen[[k]] <- arma
-      if(is.null(arma_param[[k]])) {
+      if(length(arma_param[[k]]) != 2) { 
         arma_param[[k]] <- c(1, 1)
       }
     } else Sgen[[k]] <- ADJUST
@@ -173,7 +175,7 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   allik <- NULL
 
   prev <- 1
-  for(j in 1:it){
+  for(j1 in 1:it){
     ##################### Block 1 ######################
     W <- svd(untensor(XL,list(names(pdimsL),names(ldims)[l+1])))
     WW <- tcrossprod(W$u) # W' (WW')^- W
@@ -231,10 +233,10 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
     for(j in 1:p){
       #find S2 along with sig2
       S <-  Stypa[[j]]$sqr %*% sqmode(Err,j) %*% Stypa[[j]]$sqr
-      if (if_arma[k]) {
-        SR  <- Styp(arma(n*prod(ms[-j]), sig2, S, arma_param[[k]][1], arma_param[[k]][2]))
+      if (if_arma[j]) {
+        SR  <- Styp(arma(n*prod(ms[-j]), sig2, S, arma_param[[j]][1], arma_param[[j]][2]))
       } else {
-      SR <- Styp(Sgen[[j]](n*prod(ms[-j]),sig2,S))
+        SR <- Styp(Sgen[[j]](n*prod(ms[-j]),sig2,S))
       }
       sig2 <- sum(SR$inv*S)/mn
       #update Yall and the list
@@ -288,7 +290,7 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   Tucker = list(V=V,Ls=Ls,Ms=Ms)
   covs <- lapply(Stypa,function(x)x$orig)
   allik <- -mn*(1+log(2*pi)+allik)/2
-  toret <- list( B = B, Tucker = Tucker, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j)
+  toret <- list( B = B, Tucker = Tucker, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j1)
   return(toret)
 }
 

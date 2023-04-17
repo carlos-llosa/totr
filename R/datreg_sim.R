@@ -7,10 +7,10 @@
 #' @param Xall Array containing the n tensor covariates along the last mode,
 #' so that it is of size h_1 x .. x h_l x n.
 #' @param Bt The coefficient array of size h_1 x .. x h_l x m_1 x .. x m_p
-#' @param sig2t Variance
+#' @param sig2t General variance
 #' @param corrs Character vector of size p inidicating the
 #' types of covariance matrices desired for S_1 ,.., S_p.
-#' Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 #' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then S_1 ,.., S_p will all have the
@@ -75,7 +75,7 @@ datreg_sim <- function(msT, Xall, Bt, sig2t, corrs, arma_param = NULL, covars = 
       } else if(corrs[k] == "EQC") {
         SST[[k]] <- covEQC(runif(1,-.1,.5), msT[k])
       } else if(corrs[k] == "ARMA"){
-        if(is.null(arma_param[[k]])) arma_param[[k]] <- c(1, 1)
+        if(is.null(arma_param[[k]]) | (length(arma_param[[k]]) != 2)) arma_param[[k]] <- c(1, 1)
         SST[[k]] <- covARMA(runif(arma_param[[k]][1],-.5,.5),
                             runif(arma_param[[k]][2],-.5,.5),
                             msT[k]) # why -ve half to half?

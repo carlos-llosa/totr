@@ -31,7 +31,7 @@
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
 #' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-#' Options are "AR(1)", "MA(1)", "ARMA"/"ARM(p,q)"/"ARMA(p, q)", "EQC"  for
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 #' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
@@ -90,6 +90,8 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", ar
   for(k in 1:p){
     if (corrs[k] == "ARMA" || corrs[k] == "ARMA(p,q)" || corrs[k] == "ARMA(p, q)") {
       if_arma[k] <- TRUE
+    } else {
+      arma_param[[k]] <- NA
     }
 
     if(corrs[k] == "AR(1)"){
@@ -100,7 +102,7 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", ar
       Sgen[[k]] <- ma1
     } else if (if_arma[k]) {
       Sgen[[k]] <- arma
-      if(is.null(arma_param[[k]])) {
+      if(length(arma_param[[k]]) != 2) {
         arma_param[[k]] <- c(1, 1)
       }
     } else Sgen[[k]] <- ADJUST

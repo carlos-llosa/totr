@@ -4,7 +4,7 @@
 \alias{diagdat_sim}
 \title{Diagonal Data generation}
 \usage{
-diagdat_sim(msT, hsT, bt, nn, sig2t, corrs)
+diagdat_sim(msT, hsT, bt, nn, sig2t, corrs, arma_param = NULL, covars = NULL)
 }
 \arguments{
 \item{msT}{The size of each Y_i, i.e., (m_1, ..., m_p).}
@@ -15,20 +15,36 @@ diagdat_sim(msT, hsT, bt, nn, sig2t, corrs)
 
 \item{nn}{sample size/prod(hsT) (??)}
 
-\item{sig2t}{Check this (??)}
+\item{sig2t}{General variance}
 
-\item{corrs}{Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+\item{corrs}{Character vector of size p inidicating the
+types of covariance matrices desired for S_1 ,.., S_p.
+Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
+AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
-If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.}
+If corrs is of size 1, then S_1 ,.., S_p will all have the
+same correlation structure.}
+
+\item{arma_param}{A list of size length(dim(Yall)),
+each of which contains the ARMA parameter orders (p, q)
+for that corresponding mode.
+p is the AR parameter order and q is the MA parameter order.
+If some other mode has some other kind of correlation structure
+and you still want to specify the ARMA orders,
+you can input a list of size p with otheer cases as NULL.
+The default ARMA order is (1, 1).}
+
+\item{covars}{The covariance matrices [S_1 ,.., S_p] explicitly specified.
+It would be a list of size p, where each element is a covarienace matrix of
+size $m_i x m_i$.}
 }
 \value{
 A list containing the following elements: \cr\cr
-\code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
-The last dimension must match the last dimension of Xall. \cr\cr
-\code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
-The last dimension must match the last dimension of Yall. \cr\cr
-\code{SST} - The list of matrices [S_1 ,.., S_p], S_i is of size m_i x m_i. \cr\cr
+* \code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
+  The last dimension must match the last dimension of Xall. \cr\cr
+* \code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
+  The last dimension must match the last dimension of Yall. \cr\cr
+* \code{SST} - The list of matrices [S_1 ,.., S_p], S_i is of size m_i x m_i. \cr\cr
 }
 \description{
 Diagonal Data generation
