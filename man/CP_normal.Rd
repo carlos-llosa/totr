@@ -34,7 +34,7 @@ init$TK$Ms is a list of p matrices containing the initial values for M_1 ,..,M_p
 If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.}
 
-\item{corrs}{Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
+\item{corrs}{Character vector of size p indicating the types of covariance matrices desired for S_1 ,.., S_p.
 Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
@@ -45,7 +45,7 @@ ARMA parameter orders (p, q) for that corresponding mode.
 p is the AR parameter order and q is the MA parameter order
 If some other mode has some other kind of correlation structure
 and you still want to specify the ARMA orders,
-you can input a list of size p with otheer cases as NULL.
+you can input a list of size p with other cases as NULL.
 The default ARMA order is (1, 1).}
 }
 \value{
@@ -85,9 +85,12 @@ RhsT <- 3:5
 Rbt <- 100
 Rnn <- 2
 Rcorrs = c("AR(1)","EQC","ARMA","N")
+arma_params <- list(NULL, NULL, c(1, 2), NULL)
 Rsig2t <- 20
-dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
-fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,corrs = Rcorrs)
+dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,
+                   sig2t=Rsig2t,corrs=Rcorrs, arma_param = arma_params)
+fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,
+                   corrs = Rcorrs, arma_param = arma_params)
 par(mfrow = c(1,2))
 hist(fit$B,main = "estimates in B (true in blue)")
 abline(v= Rbt,col = "blue",lwd=3)

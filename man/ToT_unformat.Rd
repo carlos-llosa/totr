@@ -24,7 +24,7 @@ The last dimension must match the last dimension of Yall.}
 
 \item{it}{maximum number of iterations.}
 
-\item{corrs}{Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
+\item{corrs}{Character vector of size p indicating the types of covariance matrices desired for S_1 ,.., S_p.
 Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
 If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.

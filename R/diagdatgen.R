@@ -9,7 +9,7 @@
 #' @param bt The value generating the Beta tensor of size hsT x msT
 #' @param nn sample size/prod(hsT) (??)
 #' @param sig2t General variance
-#' @param corrs Character vector of size p inidicating the
+#' @param corrs Character vector of size p indicating the
 #' types of covariance matrices desired for S_1 ,.., S_p.
 #' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 #' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
@@ -22,10 +22,10 @@
 #' p is the AR parameter order and q is the MA parameter order.
 #' If some other mode has some other kind of correlation structure
 #' and you still want to specify the ARMA orders,
-#' you can input a list of size p with otheer cases as NULL.
+#' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
 #' @param covars The covariance matrices [S_1 ,.., S_p] explicitly specified.
-#' It would be a list of size p, where each element is a covarienace matrix of
+#' It would be a list of size p, where each element is a covariance matrix of
 #' size $m_i x m_i$.
 #' @returns A list containing the following elements: \cr\cr
 #' * \code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.

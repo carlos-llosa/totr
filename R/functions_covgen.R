@@ -104,8 +104,17 @@ arma <- function(m, sig2, Sq, p, q, init_par = NULL) {
   } else {
     minlik <- function(arma_par){
       # negative likelihood of an ARMA(1) process
-      ar_par <- arma_par[1:p]
-      ma_par <- arma_par[p + (1:q)]
+      if(p > 0){
+        ar_par <- arma_par[1:p]
+      } else {
+        ar_par <- 0
+      }
+      if(q > 0){
+        ma_par <- arma_par[p + (1:q)]
+      } else {
+        ma_par <- 0
+      }
+      
       ## In this range with p, q > 1, there can be cases with 
       ## unidentifiability and non-psd matrices
       ## Basically, in the `odd region`, when the error occurs, 
@@ -133,7 +142,7 @@ arma <- function(m, sig2, Sq, p, q, init_par = NULL) {
     }
   }
   if(is.null(init_par)) {
-    init_par <- rep(0.00, as.integer(p + q))
+    init_par <- rep(0.01, as.integer(p + q))
   }
   # par1 <- optim(init_par, minlik, method="L-BFGS-B",
   #               lower = rep(-1 + 1e-5, p + q), # MA lower value changed due to the reparametrization
@@ -157,14 +166,21 @@ arma <- function(m, sig2, Sq, p, q, init_par = NULL) {
   par1 <- optim(par_old, minlik, method="L-BFGS-B",
               lower = pmax(par_old - 0.1, -0.9999), upper = pmin(par_old + 0.1, 0.9999))$par
   # This joined not giving too good results
+  ## Better optimization than the single L-BFGS-B
 
 
-  ar_par <- par1[1:p]
-  ma_par <- par1[p + (1:q)]
-  # print('ar_par')
-  # print(ar_par)
-  # print('ma_par')
-  # print(ma_par)
+  if(p > 0){
+    ar_par <- par1[1:p]
+  } else {
+    ar_par <- c(0)
+  }
+
+  if(q > 0){
+    ma_par <- par1[p + (1:q)]
+  } else {
+    ma_par <- c(0)
+  }
+
   return(covARMA(ar_par, ma_par, mm))
 }
 

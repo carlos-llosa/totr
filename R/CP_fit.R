@@ -30,7 +30,7 @@
 #' init$TK$Ms is a list of p matrices containing the initial values for M_1 ,..,M_p.
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
-#' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
+#' @param corrs Character vector of size p indicating the types of covariance matrices desired for S_1 ,.., S_p.
 #' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 #' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
@@ -40,12 +40,12 @@
 #' p is the AR parameter order and q is the MA parameter order
 #' If some other mode has some other kind of correlation structure
 #' and you still want to specify the ARMA orders,
-#' you can input a list of size p with otheer cases as NULL.
+#' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
 #' @return A list containing the following elements: \cr\cr
 #' \code{B} -  the estimated coefficient B. \cr\cr
-#' C\code{P} - A list with the estimated L_1 ,.., L_l in the list Ls and estimated M_1 ,.., M_p in the list Ms.\cr\cr
-#' \\code{sig2} - the estimate of \\sigma^2. \cr\cr
+#' \code{P} - A list with the estimated L_1 ,.., L_l in the list Ls and estimated M_1 ,.., M_p in the list Ms.\cr\cr
+#' \code{sig2} - the estimate of \\sigma^2. \cr\cr
 #' \code{covs} - a list with the estimated matrices S_1 ,.., S_p. \cr\cr
 #' \code{allconv} - a vector with all the convergence criteria. \cr\cr
 #' \code{allik} - a vector with all the loglikelihoods, should be monotone increasing. \cr\cr
@@ -61,9 +61,12 @@
 #' Rbt <- 100
 #' Rnn <- 2
 #' Rcorrs = c("AR(1)","EQC","ARMA","N")
+#' arma_params <- list(NULL, NULL, c(1, 2), NULL)
 #' Rsig2t <- 20
-#' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
-#' fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,corrs = Rcorrs)
+#' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,
+#'                    sig2t=Rsig2t,corrs=Rcorrs, arma_param = arma_params)
+#' fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,
+#'                    corrs = Rcorrs, arma_param = arma_params)
 #' par(mfrow = c(1,2))
 #' hist(fit$B,main = "estimates in B (true in blue)")
 #' abline(v= Rbt,col = "blue",lwd=3)
@@ -76,10 +79,7 @@
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
 #' @references \url{https://arxiv.org/abs/2012.10249}
 CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
-                      corrs = "N", arma_param) {
-  print('arma_param')
-  print(arma_param)
-
+                      corrs = "N", arma_param = NULL) {
 
   #setting up dimensions
   p <- length(dim(Yall))-1
@@ -116,8 +116,6 @@ CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
       }
     } else Sgen[[k]] <- ADJUST
   }
-  print('arma_param')
-  print(arma_param)
 
   supd1 <- function(Gs,X){
     #this function takes Ls,Xs, and returns the superdiagonals (for each i) of Tucker(Xi,t(Ls))

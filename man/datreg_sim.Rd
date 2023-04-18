@@ -16,7 +16,7 @@ so that it is of size h_1 x .. x h_l x n.}
 
 \item{sig2t}{General variance}
 
-\item{corrs}{Character vector of size p inidicating the
+\item{corrs}{Character vector of size p indicating the
 types of covariance matrices desired for S_1 ,.., S_p.
 Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
@@ -30,11 +30,11 @@ for that corresponding mode.
 p is the AR parameter order and q is the MA parameter order.
 If some other mode has some other kind of correlation structure
 and you still want to specify the ARMA orders,
-you can input a list of size p with otheer cases as NULL.
+you can input a list of size p with other cases as NULL.
 The default ARMA order is (1, 1).}
 
 \item{covars}{The covariance matrices [S_1 ,.., S_p] explicitly specified.
-It would be a list of size p, where each element is a covarienace matrix of
+It would be a list of size p, where each element is a covariance matrix of
 size $m_i x m_i$.}
 }
 \value{
