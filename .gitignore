@@ -8,3 +8,5 @@ test_totr_*.R
 Subrata_info.md
 totr.Rproj
 .Rbuildignore
+inst/doc
+not_working*.R

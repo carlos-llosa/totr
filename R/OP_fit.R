@@ -1,5 +1,5 @@
 
-#' Tensor-on-Tensor Regression with Kronecker Separable Covariance and OP Format Coefficient
+#' Tensor-on-Tensor Regression with Kronecker Separable Covariance and OP Format (outer product) Coefficient
 #'
 #' Tensor-on-tensor regression
 #'  Y_i = < X_i | B > + E_i
@@ -80,7 +80,7 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", ar
   l <- length(dim(Xall))-1
   if(dim(Xall)[l+1] != dim(Yall)[p+1]) stop("sample size of X and Y do not match")
   n <- dim(Yall)[p+1]
-  
+
   #setting up correlations types
   if(length(corrs) == 1) corrs <- rep(corrs,p)
   Sgen <- as.list(1:p)

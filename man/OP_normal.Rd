@@ -2,7 +2,7 @@
 % Please edit documentation in R/OP_fit.R
 \name{OP_normal}
 \alias{OP_normal}
-\title{Tensor-on-Tensor Regression with Kronecker Separable Covariance and OP Format Coefficient}
+\title{Tensor-on-Tensor Regression with Kronecker Separable Covariance and OP Format (outer product) Coefficient}
 \usage{
 OP_normal(
   Yall,

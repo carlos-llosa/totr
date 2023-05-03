@@ -1,22 +1,22 @@
 
 
 #' Diagonal Data generation
-#' 
+#'
 #' @rdname diagdat_sim
 #'
-#' @param msT The size of each Y_i, i.e., (m_1, ..., m_p).
-#' @param hsT The size of each X_i, i.e., (h_1, ..., h_l).
-#' @param bt The value generating the Beta tensor of size hsT x msT
-#' @param nn sample size/prod(hsT) (??)
+#' @param msT The size of each \eqn{Y_i}, i.e., \eqn{(m_1, ..., m_p)}.
+#' @param hsT The size of each \eqn{X_i}, i.e., \eqn{(h_1, ..., h_l)}.
+#' @param bt The value generating the Beta tensor of size \eqn{hsT \times msT}
+#' @param nn sample size/prod(hsT)
 #' @param sig2t General variance
 #' @param corrs Character vector of size p indicating the
-#' types of covariance matrices desired for S_1 ,.., S_p.
+#' types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
 #' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
 #' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
-#' If corrs is of size 1, then S_1 ,.., S_p will all have the
+#' If corrs is of size 1, then \eqn{S_1 ,.., S_p} will all have the
 #' same correlation structure.
-#' @param arma_param A list of size length(dim(Yall)),
+#' @param arma_param A list of size \code{length(dim(Yall))},
 #' each of which contains the ARMA parameter orders (p, q)
 #' for that corresponding mode.
 #' p is the AR parameter order and q is the MA parameter order.
@@ -24,15 +24,15 @@
 #' and you still want to specify the ARMA orders,
 #' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
-#' @param covars The covariance matrices [S_1 ,.., S_p] explicitly specified.
+#' @param covars The covariance matrices \eqn{[S_1 ,.., S_p]} explicitly specified.
 #' It would be a list of size p, where each element is a covariance matrix of
-#' size $m_i x m_i$.
+#' size \eqn{m_i x m_i}.
 #' @returns A list containing the following elements: \cr\cr
-#' * \code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
+#' * \code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size \eqn{m_1 \times .. \times m_p \times n}.
 #'   The last dimension must match the last dimension of Xall. \cr\cr
-#' * \code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
+#' * \code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size \eqn{h_1 \times .. \times h_l \times n}.
 #'   The last dimension must match the last dimension of Yall. \cr\cr
-#' * \code{SST} - The list of matrices [S_1 ,.., S_p], S_i is of size m_i x m_i. \cr\cr
+#' * \code{SST} - The list of matrices \eqn{[S_1 ,.., S_p]}, \eqn{S_i} is of size \eqn{m_i \times m_i}. \cr\cr
 #' @export
 #' @examples
 #' # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
@@ -67,7 +67,7 @@ diagdat_sim <- function(msT, hsT, bt, nn, sig2t, corrs, arma_param = NULL, covar
     for(k in 1:length(msT)){
       if(corrs[k] == "AR(1)") {
         SST[[k]] <- covAR1(runif(1,-.5,.5), msT[k])
-      } else if(corrs[k] == "MA(1)"){ 
+      } else if(corrs[k] == "MA(1)"){
         SST[[k]] <- covMA1(runif(1,-.5,.5), msT[k])
       } else if(corrs[k] == "EQC") {
         SST[[k]] <- covEQC(runif(1,-.1,.5), msT[k])

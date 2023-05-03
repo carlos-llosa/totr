@@ -134,8 +134,10 @@ arma <- function(m, sig2, Sq, p, q, init_par = NULL) {
         return(m*ldA + sum(Ai* Sq)/sig2)  # tr(AB) has closed form sum(A*B)
       },
       error=function(e){
-        print("Cholesky problem")
-        print(arma_par)
+        if(DEBUG){
+          print("Cholesky problem")
+          print(arma_par)
+        }
         return(1e+60)
       }
       )
