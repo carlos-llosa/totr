@@ -12,7 +12,7 @@ ADJUST <- function(n,sig2,S){
 
 covMA1 <- function(rho,m){
   if(m == 1) return(matrix(1,1,1))
-  #Generates the m x m MA(1)-correlation matrix with coef rho
+  #Generates the m \times m MA(1)-correlation matrix with coef rho
   toeplitz(c(1,rho,rep(0,m-2)))
 }
 ma1 <- function(m,sig2,Sq){
@@ -34,7 +34,7 @@ ma1 <- function(m,sig2,Sq){
 
 covEQC <- function(rho,m){
   if(m == 1) return(matrix(1,1,1))
-  #Generates the m x m equi-correlation matrix with coef rho
+  #Generates the m \times m equi-correlation matrix with coef rho
   toeplitz(c(1,rep(rho,m-1)))
 }
 eqc <- function(m,sig2,Sq){
@@ -53,7 +53,7 @@ eqc <- function(m,sig2,Sq){
 }
 covAR1 <- function(ar1,m){
   if(m == 1) return(matrix(1,1,1))
-  #Generates the m x m AR(1)-correlation matrix with coef ar1
+  #Generates the m \times m AR(1)-correlation matrix with coef ar1
   toeplitz(ar1^(0:(m-1)))
 }
 ar1 <- function(m,sig2,Sq){
@@ -84,7 +84,7 @@ ar1 <- function(m,sig2,Sq){
 #' @importFrom stats optim ARMAacf
 covARMA <- function(ar, ma, m){
   if(m == 1) return(matrix(1, 1, 1))
-  #Generates the m x m ARMA(p, q)-correlation matrix with coef ar and ma
+  #Generates the m \times m ARMA(p, q)-correlation matrix with coef ar and ma
   # Notice that the MA coeffieicnt is not usual in previous covarma function
   # Here it is according to Brockwell and Davis
   tmp <- ARMAacf(ar, ma, lag.max = m-1)

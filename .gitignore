@@ -10,3 +10,5 @@ totr.Rproj
 .Rbuildignore
 inst/doc
 not_working*.R
+/doc/
+/Meta/

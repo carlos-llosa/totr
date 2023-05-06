@@ -13,9 +13,9 @@ diagdat_sim(msT, hsT, bt, nn, sig2t, corrs, arma_param = NULL, covars = NULL)
 
 \item{bt}{The value generating the Beta tensor of size \eqn{hsT \times msT}}
 
-\item{nn}{sample size/prod(hsT)}
+\item{nn}{sample size/prod(hsT) (How to write this in a better way???)}
 
-\item{sig2t}{General variance}
+\item{sig2t}{General variance \eqn{\sigma^2}}
 
 \item{corrs}{Character vector of size p indicating the
 types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
@@ -27,7 +27,7 @@ same correlation structure.}
 
 \item{arma_param}{A list of size \code{length(dim(Yall))},
 each of which contains the ARMA parameter orders (p, q)
-for that corresponding mode.
+for that corresponding mode.q
 p is the AR parameter order and q is the MA parameter order.
 If some other mode has some other kind of correlation structure
 and you still want to specify the ARMA orders,
@@ -36,15 +36,15 @@ The default ARMA order is (1, 1).}
 
 \item{covars}{The covariance matrices \eqn{[S_1 ,.., S_p]} explicitly specified.
 It would be a list of size p, where each element is a covariance matrix of
-size \eqn{m_i x m_i}.}
+size \eqn{m_i \times m_i}.}
 }
 \value{
 A list containing the following elements: \cr\cr
-* \code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size \eqn{m_1 \times .. \times m_p \times n}.
-  The last dimension must match the last dimension of Xall. \cr\cr
-* \code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size \eqn{h_1 \times .. \times h_l \times n}.
-  The last dimension must match the last dimension of Yall. \cr\cr
-* \code{SST} - The list of matrices \eqn{[S_1 ,.., S_p]}, \eqn{S_i} is of size \eqn{m_i \times m_i}. \cr\cr
+\code{Yall} - Array containing the n tensor responses along the last mode, so that it is of size \eqn{m_1 \times .. \times m_p \times n}.
+  The last dimension must match the last dimension of \code{Xall}. \cr\cr
+\code{Xall} Array containing the n tensor covariates along the last mode, so that it is of size \eqn{h_1 \times .. \times h_l \times n}.
+  The last dimension must match the last dimension of \code{Yall}. \cr\cr
+\code{SST} - The list of matrices \eqn{[S_1 ,.., S_p]}, \eqn{S_i} is of size \eqn{m_i \times m_i}. \cr\cr
 }
 \description{
 Diagonal Data generation
@@ -56,12 +56,12 @@ RmsT <- 6:9
 RhsT <- 3:5
 Rbt <- 100
 Rnn <- 2
-Rcorrs = c("AR(1)","EQC","MA(1)","N")
+Rcorrs <- c("AR(1)","EQC","MA(1)","N")
 Rsig2t <- 20
 dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
-dim(dat$Xall)
-dim(dat$Yall)
-dim(dat$SST[[1]])
+print(dim(dat$Xall))
+print(dim(dat$Yall))
+print(dim(dat$SST[[1]]))
 }
 \references{
 \url{https://arxiv.org/abs/2012.10249}

@@ -48,11 +48,9 @@ dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,
 ## Fit CP decomposed regression parameter
 fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,
                    corrs = Rcorrs, arma_param = arma_params)
-# par(mfrow = c(1,2))
 hist(fit$B,main = "estimates in B (true in blue)")
 abline(v= Rbt,col = "blue",lwd=3)
 plot(ts(fit$allik),main = "loglikelihood")
-# par(mfrow = c(1,1))
 covars <- rbind("true" = c(Rsig2t,sapply(dat$SST,function(x)x[2,1])),
                 "est" = c(fit$sig2,sapply(fit$covs,function(x)x[2,1])))
 colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
@@ -75,9 +73,6 @@ RhsT <- 2:4
 Rnn <- 10
 
 # Specifying covariate and regression coefficient
-# X <- array(1:prod(RhsT, Rnn), dim = c(RhsT, Rnn))
-# Bt <- array(1:prod(dim(X), RmsT), c(dim(X), RmsT))/1e5
-
 X <- array(1:prod(RhsT, Rnn) + 1 * rnorm(prod(RhsT, Rnn)), dim = c(RhsT, Rnn))
 Bt <- array(1:prod(RhsT, RmsT) + 1 * rnorm(prod(RhsT, RmsT)), c(RhsT, RmsT)) / 1e5
 
