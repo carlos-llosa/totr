@@ -52,7 +52,10 @@
 #' dim(dat$SST[[1]])
 #' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
 #' @seealso \code{\link{diagdat_sim}}
-#' @references \url{https://arxiv.org/abs/2012.10249}
+#' @references Llosa-Vite, C., & Maitra, R. (2022). 
+#'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#' 
 datreg_sim <- function(msT, Xall, Bt, sig2t, corrs, arma_param = NULL, covars = NULL){
 
   #size of response

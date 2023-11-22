@@ -1,5 +1,5 @@
 DEBUG <- 0
-
+indep <- function(m,sig2,Sq) diag(ncol(Sq))
 #ADJUST procedure as in Glanz and Carvalho 2018
 ADJUST <- function(n,sig2,S){
   mm <- ncol(S)

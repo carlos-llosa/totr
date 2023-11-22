@@ -78,8 +78,11 @@
 #'                 "est" = c(fit$sig2,sapply(fit$covs,function(x)x[2,1])))
 #' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 #' covars
-#' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}, Subrata Pal, \email{SubrataluPal@@gmail.com}
-#' @references \url{https://arxiv.org/abs/2012.10249}
+#' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @references Llosa-Vite, C., & Maitra, R. (2022). 
+#'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#' 
 #' @import tensorA
 TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs = "N", arma_param = NULL){
   #setting up dimensions
@@ -92,27 +95,29 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   if(length(corrs) == 1) corrs <- rep(corrs,p)
   Sgen <- as.list(1:p)
   if_arma <- rep(FALSE, p)
-  if (is.null(arma_param)) arma_param <- as.list(1:p)
-
+  if (is.null(arma_param)) arma_param <- as.list(rep(NA,p))
+  
   for(k in 1:p){
     if (corrs[k] == "ARMA" || corrs[k] == "ARMA(p,q)" || corrs[k] == "ARMA(p, q)") {
       if_arma[k] <- TRUE
-    } else {
-      arma_param[[k]] <- NA
-    }
-
-    if(corrs[k] == "AR(1)"){
+      Sgen[[k]] <- arma
+      if(length(arma_param[[k]]) != 2) { 
+        arma_param[[k]] <- c(1, 1)
+      }
+    } else if(corrs[k] == "AR(1)"){
       Sgen[[k]] <- ar1
     } else if(corrs[k] == "EQC"){
       Sgen[[k]] <- eqc
     } else if(corrs[k] == "MA(1)"){
       Sgen[[k]] <- ma1
-    } else if (if_arma[k]) {
-      Sgen[[k]] <- arma
-      if(length(arma_param[[k]]) != 2) { 
-        arma_param[[k]] <- c(1, 1)
-      }
-    } else Sgen[[k]] <- ADJUST
+    } else if(corrs[k] == "independent"){
+      Sgen[[k]] <- indep
+    } else if(corrs[k] == "N"){
+      Sgen[[k]] <- ADJUST
+    } else {
+      cat(k,"unknown corr",corrs[k],". Will assume unconstrained Sigma \n")
+      Sgen[[k]] <- ADJUST
+    }
   }
 
   #setting up dimensions (very important for tensor algebra, see package tensorA)

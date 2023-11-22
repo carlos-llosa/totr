@@ -1,13 +1,16 @@
 
-
-#' Diagonal Data generation
+#' Balanced designs TANOVA Data generation
+#' 
+#' Generates a TANOVA balanced design, where each covariate \eqn{X_i} is an 
+#' indicator tensor with 1 at one position and zeroes everywhere else. Here, 
+#' null hypothesis of equality of groups is true for all factor combinations.
 #'
 #' @rdname diagdat_sim
 #'
 #' @param msT The size of each \eqn{Y_i}, i.e., \eqn{(m_1, ..., m_p)}.
 #' @param hsT The size of each \eqn{X_i}, i.e., \eqn{(h_1, ..., h_l)}.
-#' @param bt The value generating the Beta tensor of size \eqn{hsT \times msT}
-#' @param nn sample size/prod(hsT) (How to write this in a better way???)
+#' @param bt The unique value repeated in the entries of  the Beta tensor of size \eqn{(h_1, ..., h_l,m_1, ..., m_p)}
+#' @param nn The number of repetitions per factor combination.
 #' @param sig2t General variance \eqn{\sigma^2}
 #' @param corrs Character vector of size p indicating the
 #' types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
@@ -48,7 +51,11 @@
 #' print(dim(dat$Yall))
 #' print(dim(dat$SST[[1]]))
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
-#' @references \url{https://arxiv.org/abs/2012.10249}
+#' @author Subrata Pal, \email{subrata@@iastate.edu}
+#' @references Llosa-Vite, C., & Maitra, R. (2022). 
+#'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#' 
 diagdat_sim <- function(msT, hsT, bt, nn, sig2t, corrs, 
                         arma_param = NULL, covars = NULL){
 

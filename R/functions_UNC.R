@@ -55,6 +55,7 @@
 #' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
 #' @references \url{https://arxiv.org/abs/2012.10249}
 ToT_unformat <- function(Yall,Xall,it = 100,corrs = "N",err = 1e-8){
   p <- length(dim(Yall))-1
