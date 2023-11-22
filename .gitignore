@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+Test_tensorA.R
+test_totr_*.R
+Subrata_info.md
+totr.Rproj
+.Rbuildignore
+inst/doc
+not_working*.R
+/doc/
+/Meta/

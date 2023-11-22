@@ -1,0 +1,101 @@
+---
+title: "An introduction to totr for Kronecker seperable Tensor-On-Tensor-Regression"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{totr-first-steps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The `totr` package is developed for tensor-on-tensor-regression (TOTR), which can provide regressions and generalizations of ANOVA/MANOVA where the response and the covariate, both can be tensors. A Block Relaxation method is used to estimate the regression coefficient parameter having a tensor decomposed structure, and the Kronecker separable covariance structure. The vignette gives a brief introduction to the functions included in `totr` with simulated examples.
+
+
+## General Model
+With $Y_i$ being the array containing the tensor responses of size $m_1 \times \dots \times m_p$ and $X_i$ being the array of the corresponding tensor covariate of size $h_1 \times \dots \times h_l,$ the general model can be written as $$Y_i = \ \langle X_i | B \rangle \ + E_i, \ \forall \ i = 1, 2, 3, \dots n$$ where $B$ is the common covariance tensor with size $h_1 \times \dots \times h_l \times m_1 \times \dots \times m_p,$ preferably with some possible tensor decompositions to reduce the number of parameters (see the next subsection). $\langle A|B \rangle$ denotes the partial contraction operator between tensors $A$ and $B,$ which contracts all the modes of $A$ with corresponding first few modes of $B$. The covariance of the error tensors are Kronecker separable and is expressed as: $Var(\text{vec}(E_i)) = \sigma^2 (\otimes_k S_k),$ i.e., the $k$-th mode having the corresponding covariance matrix $S_k.$
+
+
+### Decompositions of coefficient tensor
+
+Different decomposition of $B$ is available through this package, for example, the CP decomposition, the Tucker decomposition, the Tensor Ring decomposition and the OP decomposition. 
+
+For the CP decomposition, the coefficient matrix $B = [[ L_1 ,.., L_l , M_1 ,..., M_p ]],$ where the matrix $L_k$ is of size $h_k \times R$, and the matrix $M_k$ is of size $m_k \times R$, where $R$ is the CP rank. The matrix $S_k$ is positive definite of size $m_k \times m_k$ and is restricted to (1,1) element equal to $1$.
+
+A simulated sample case of tensor variate ANOVA is shown below: 
+```{r setup, cache = TRUE}
+library(totr)
+
+# Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
+set.seed(1234)
+RmsT <- 6:9
+RhsT <- 3:5
+Rbt <- 50
+Rnn <- 4
+Rcorrs = c("AR(1)","EQC","ARMA","N")
+arma_params <- list(NULL, NULL, c(1, 2), NULL)
+Rsig2t <- 20
+
+## Simulate data
+dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,
+                   sig2t=Rsig2t,corrs=Rcorrs, arma_param = arma_params)
+
+## Fit CP decomposed regression parameter
+fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,
+                   corrs = Rcorrs, arma_param = arma_params)
+hist(fit$B,main = "estimates in B (true in blue)")
+abline(v= Rbt,col = "blue",lwd=3)
+plot(ts(fit$allik),main = "loglikelihood")
+covars <- rbind("true" = c(Rsig2t,sapply(dat$SST,function(x)x[2,1])),
+                "est" = c(fit$sig2,sapply(fit$covs,function(x)x[2,1])))
+colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
+covars
+```
+
+
+
+
+
+
+We also provide a second example where we simulate a regression problem where we supply the X and Y values:
+
+```{r regression}
+rm(list=ls())
+# Tensor-on-Tensor Regression on 6x7x8 responses and 2x3x4 covariates
+set.seed(1234)
+RmsT <- 6:8
+RhsT <- 2:4
+Rnn <- 10
+
+# Specifying covariate and regression coefficient
+X <- array(1:prod(RhsT, Rnn) + 1 * rnorm(prod(RhsT, Rnn)), dim = c(RhsT, Rnn))
+Bt <- array(1:prod(RhsT, RmsT) + 1 * rnorm(prod(RhsT, RmsT)), c(RhsT, RmsT)) / 1e5
+
+# Specifying Correlation types
+# Rcorrs <- c("ARMA", "ARMA", "N")
+# arma_params <- list(c(1, 1), c(1, 2), NULL)
+Rcorrs <- c("AR(1)", "MA(1)", "N")
+Rsig2t <- 10
+
+## Simulation
+dat <- datreg_sim(msT=RmsT, Xall=X, Bt=Bt, sig2t=Rsig2t,
+                   corrs=Rcorrs)
+dim(dat$Yall)
+dim(dat$SST[[1]])
+
+## Fit TK decomposed regression parameter
+fit <- TK_normal(Yall = dat$Yall, Xall = dat$Xall,
+                 pdims = c(2, 2, 2, 2, 2, 2), corrs = Rcorrs)
+hist(fit$B,main = "estimates in B (true in blue)")
+abline(v = 0, col = "blue",lwd=3)
+plot(ts(fit$allik),main = "loglikelihood")
+covars <- rbind("true" = c(Rsig2t,sapply(dat$SST,function(x)x[2,1])),
+                "est" = c(fit$sig2,sapply(fit$covs,function(x)x[2,1])))
+colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
+covars
+```

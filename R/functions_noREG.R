@@ -20,7 +20,13 @@ norm <- function(x){
 }
 normalize <- function(x){
   #returns a matrix with normalized columns
-  apply(x,2,function(y)  return(y/norm(y)))
+  tmp <- apply(x,2,function(y)  return(y/norm(y)))
+  # Change, in case some dim becomes 1,
+  # the matrix structure becomes vector.
+  # Creating problems in creating 'Ls'
+  # Check
+  if (!is.matrix(tmp)) tmp <- matrix(tmp, nrow = 1)
+  return(tmp)
 }
 ginvS <- function(X,tol=1e-10){
   #generalized inverse of non-negative definite matrix X; faster than MASS::ginv

@@ -2,47 +2,57 @@
 #' Tensor-on-Tensor Regression with Kronecker Separable Covariance and CP Format Coefficient
 #'
 #' Tensor-on-tensor regression
-#'  Y_i = < X_i | B > + E_i\cr
+#' \eqn{Y_i = < X_i | B > + E_i}\cr
 #' with kronecker-separable covariance
-#' Var(vec(E_i)) = \\sigma^2 \\otimes_k S_k
+#' \eqn{Var(vec(E_i)) = \sigma^2 \otimes_k S_k}
 #' and CP-formatted
-#' B = [[  L_1 ,.., L_l , M_1 ,..., M_p ]].\cr
-#' The size of the ith tensor covariate X_i is h_1 x .. x h_l,
-#' The size of the ith tensor response Y_i is m_1 x .. x m_p,
-#' the size of the regression coefficient B is of size h_1 x .. x h_l x m_1 x .. x m_p,
-#' and i=1,...,n.\cr
-#' The matrix L_k is of size h_k x R, where R is the CP rank,\cr
-#' the matrix M_k is of size m_k x R,\cr
-#' and matrix S_k is positive definite of size m_k x m_k and is restricted to (1,1) element equal to 1.
+#' \eqn{B = [[  L_1 ,.., L_l , M_1 ,..., M_p ]]}.\cr
+#' The size of the ith tensor covariate \eqn{X_i} is \eqn{h_1 \times .. \times h_l},
+#' The size of the ith tensor response \eqn{Y_i} is \eqn{m_1 \times .. \times m_p},
+#' the size of the regression coefficient B is of size \eqn{h_1 \times .. \times h_l \times m_1 \times .. \times m_p},
+#' and \eqn{i=1,...,n}.\cr
+#' The matrix \eqn{L_k} is of size \eqn{h_k \times R}, where R is the CP rank,
+#' the matrix \eqn{M_k} is of size \eqn{m_k \times R},
+#' and matrix \eqn{S_k} is positive definite of size \eqn{m_k \times m_k} and is restricted to (1,1) element equal to 1.
 #'
 #' Convergence is achieved when the relative difference in snorm(B) + snorm(S) is less than err.
-#' snorm(Y) here means norm(Y)/\\sqrt(size of Y)
+#' snorm(Y) here means norm(Y)/sqrt(size of Y).
 #'
-#' @param Yall Array containing the n tensor responses along the last mode, so that it is of size m_1 x .. x m_p x n.
+#' @param Yall Array containing the n tensor responses along the last mode, so that it is of size \eqn{m_1 \times .. \times m_p \times n}.
 #' The last dimension must match the last dimension of Xall.
-#' @param Xall Array containing the n tensor covariates along the last mode, so that it is of size h_1 x .. x h_l x n.
+#' @param Xall Array containing the n tensor covariates along the last mode, so that it is of size \eqn{h_1 \times .. \times h_l \times n}.
 #' The last dimension must match the last dimension of Yall.
 #' @param R positive whole number indicating the CP rank.
 #' @param it maximum number of iterations.
 #' @param err relative error used to assess convergence.
-#' @param init list containing initial values. init$covssig2 contains the initial value of \\sigma^2, init$covs$covs is a list of p matrices
-#' containing initial values for S_1 ,.., S_p, init$TK$Ls is a list of l matrices containing the initial values for L_1 ,..,L_l, and
-#' init$TK$Ms is a list of p matrices containing the initial values for M_1 ,..,M_p.
+#' @param init list containing initial values. init$covssig2 contains the initial value of \eqn{\sigma^2}, init$covs$covs is a list of p matrices
+#' containing initial values for \eqn{S_1 ,.., S_p}, init$TK$Ls is a list of l matrices containing the initial values for \eqn{L_1 ,..,L_l}, and
+#' init$TK$Ms is a list of p matrices containing the initial values for \eqn{M_1 ,..,M_p}.
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
-#' @param corrs Character vector of size p inidicating the types of covariance matrices desired for S_1 ,.., S_p.
-#' Options are "AR(1)", "MA(1)", "EQC"  for AR(1), MA(1) and equivariance correlation matrices, and
+#' @param corrs Character vector of size p indicating the types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
+#' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
-#' If corrs is of size 1, then S_1 ,.., S_p will all have the same correlation structure.
+#' If corrs is of size 1, then \eqn{S_1 ,.., S_p} will all have the same correlation structure.
+#' @param arma_param A list of size \code{length(dim(Yall))}, each of which contains the
+#' ARMA parameter orders (p, q) for that corresponding mode.
+#' p is the AR parameter order and q is the MA parameter order
+#' If some other mode has some other kind of correlation structure
+#' and you still want to specify the ARMA orders,
+#' you can input a list of size p with other cases as NULL.
+#' The default ARMA order is (1, 1).
 #' @return A list containing the following elements: \cr\cr
-#' B -  the estimated coefficient B. \cr\cr
-#' CP - A list with the estimated L_1 ,.., L_l in the list Ls and estimated M_1 ,.., M_p in the list Ms.\cr\cr
-#' sig2 - the estimate of \\sigma^2. \cr\cr
-#' covs - a list with the estimated matrices S_1 ,.., S_p. \cr\cr
-#' allconv - a vector with all the convergence criteria. \cr\cr
-#' allik - a vector with all the loglikelihoods, should be monotone increasing. \cr\cr
-#' it - the number of iterations taken \cr\cr
+#' \code{B} -  the estimated coefficient B. \cr\cr
+#' \code{P} - A list with the estimated \eqn{L_1 ,.., L_l} in the list \code{Ls} and estimated \eqn{M_1 ,.., M_p} in the list \code{Ms}.\cr\cr
+#' \code{sig2} - the estimate of \eqn{\sigma^2}. \cr\cr
+#' \code{covs} - a list with the estimated matrices \eqn{S_1 ,.., S_p}. \cr\cr
+#' \code{allconv} - a vector with all the convergence criteria. \cr\cr
+#' \code{allik} - a vector with all the loglikelihoods, should be monotone increasing. \cr\cr
+#' \code{it} - the number of iterations taken \cr\cr
 #' @export
+#' @importFrom stats optimize rWishart rnorm runif toeplitz uniroot
+#' @importFrom utils tail
 #' @examples
 #' # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
 #' set.seed(1234)
@@ -50,10 +60,13 @@
 #' RhsT <- 3:5
 #' Rbt <- 100
 #' Rnn <- 2
-#' Rcorrs = c("AR(1)","EQC","MA(1)","N")
+#' Rcorrs = c("AR(1)","EQC","ARMA","N")
+#' arma_params <- list(NULL, NULL, c(1, 2), NULL)
 #' Rsig2t <- 20
-#' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
-#' fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,corrs = Rcorrs)
+#' dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,
+#'                    sig2t=Rsig2t,corrs=Rcorrs, arma_param = arma_params)
+#' fit <- CP_normal(Yall = dat$Yall,Xall = dat$Xall, R = 2,
+#'                    corrs = Rcorrs, arma_param = arma_params)
 #' par(mfrow = c(1,2))
 #' hist(fit$B,main = "estimates in B (true in blue)")
 #' abline(v= Rbt,col = "blue",lwd=3)
@@ -65,7 +78,9 @@
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
 #' @references \url{https://arxiv.org/abs/2012.10249}
-CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
+CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
+                      corrs = "N", arma_param = NULL) {
+
   #setting up dimensions
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
@@ -74,17 +89,31 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
   hs <- dim(Xall)[-(l+1)]
   ms <- dim(Yall)[-(p+1)]
   mn <- prod(dim(Yall))
-  #setting up the type of correlation
 
+  #setting up the type of correlation
   if(length(corrs) == 1) corrs <- rep(corrs,p)
   Sgen <- as.list(1:p)
+  if_arma <- rep(FALSE, p)
+  if (is.null(arma_param)) arma_param <- as.list(1:p)
+
   for(k in 1:p){
+    if (corrs[k] == "ARMA" || corrs[k] == "ARMA(p,q)" || corrs[k] == "ARMA(p, q)") {
+      if_arma[k] <- TRUE
+    } else {
+      arma_param[[k]] <- NA
+    }
+
     if(corrs[k] == "AR(1)"){
       Sgen[[k]] <- ar1
     } else if(corrs[k] == "EQC"){
       Sgen[[k]] <- eqc
     } else if(corrs[k] == "MA(1)"){
       Sgen[[k]] <- ma1
+    } else if (if_arma[k]) {
+      Sgen[[k]] <- arma
+      if(length(arma_param[[k]]) != 2) {
+        arma_param[[k]] <- c(1, 1)
+      }
     } else Sgen[[k]] <- ADJUST
   }
 
@@ -94,7 +123,7 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
     # this is performed efficiently by avoiding matrix products
     res <- NULL
     for(r in 1:R){
-      Ns <- Reduce("%o%",lapply(Gs,function(x)x[,r]))
+      Ns <- Reduce("%o%",lapply(Gs,function(x)x[,r]))                 # problem if hst <- 1:3
       res <- rbind(res,apply(X,length(dim(X)),function(x)sum(x*Ns)))
     }
     return(res)
@@ -158,7 +187,11 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
       #M and S
       Mr <- Sqrprev %*% Yall %*% t(GallR) %*% ginvS(GallR2)
       SR <- tcrossprod(Sqrprev %*% Yall) - Mr %*% GallR2 %*% t(Mr)
-      STTs[[1]] <- Styp(Sgen[[1]](n,sig2,SR))
+      if (if_arma[k]) {
+        STTs[[1]] <- Styp(arma(n, sig2, SR, arma_param[[k]][1], arma_param[[k]][2]))
+      } else {
+        STTs[[1]] <- Styp(Sgen[[1]](n,sig2,SR))
+      }
       #sig2 and update list, Yall
       Yall <- STTs[[1]]$isqr %*% Sqrprev %*% Yall
       sig2 <- sum(STTs[[1]]$inv*SR)/mn
@@ -175,7 +208,11 @@ CP_normal <- function(Yall,Xall,R,it = 100, err = 1e-8,init = NULL,corrs = "N"){
         Mr <- apply(apply(t(1:n),2,function(i)GallR[,i]*Yz[,,i]),1,sum)
         Mr <- Sqrprev %*% t(array(Mr,c(R,ms[k]))) %*% ginvS(HR)
         SR <- Sqrprev %*% sqmode(Yall,k) %*% Sqrprev - Mr %*% HR %*% t(Mr)
-        STTs[[k]]  <- Styp(Sgen[[k]](n*prod(ms[-k]),sig2,SR))
+        if (if_arma[k]) {
+          STTs[[k]]  <- Styp(arma(n*prod(ms[-k]), sig2, SR, arma_param[[k]][1], arma_param[[k]][2]))
+        } else {
+          STTs[[k]]  <- Styp(Sgen[[k]](n*prod(ms[-k]),sig2,SR))
+        }
         #update lists, Yall and s2
         Yall <- amprod(Yall,STTs[[k]]$isqr %*% Sqrprev,k)
         sig2 <- sum(STTs[[k]]$inv*SR)/mn
