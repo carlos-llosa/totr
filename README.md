@@ -13,4 +13,4 @@ install_github("carlos-llosa/totr")
 library(totr)
 ``` 
 
-[1] Llosa-Vite, C., & Maitra, R. (2022). Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance IEEE Transactions on Pattern Analysis and Machine Intelligence, 45(2), 2282 - 2296.[(link to article)](https://doi.org/10.1109/TPAMI.2022.3164836)
+[1] Llosa-Vite, C., & Maitra, R. (2022). Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance. IEEE Transactions on Pattern Analysis and Machine Intelligence, 45(2), 2282 - 2296.[(link to article)](https://doi.org/10.1109/TPAMI.2022.3164836)
