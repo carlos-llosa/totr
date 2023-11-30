@@ -2,7 +2,7 @@
 % Please edit documentation in R/diagdatgen.R
 \name{diagdat_sim}
 \alias{diagdat_sim}
-\title{Diagonal Data generation}
+\title{Balanced designs TANOVA Data generation}
 \usage{
 diagdat_sim(msT, hsT, bt, nn, sig2t, corrs, arma_param = NULL, covars = NULL)
 }
@@ -11,9 +11,9 @@ diagdat_sim(msT, hsT, bt, nn, sig2t, corrs, arma_param = NULL, covars = NULL)
 
 \item{hsT}{The size of each \eqn{X_i}, i.e., \eqn{(h_1, ..., h_l)}.}
 
-\item{bt}{The value generating the Beta tensor of size \eqn{hsT \times msT}}
+\item{bt}{The unique value repeated in the entries of  the Beta tensor of size \eqn{(h_1, ..., h_l,m_1, ..., m_p)}}
 
-\item{nn}{sample size/prod(hsT) (How to write this in a better way???)}
+\item{nn}{The number of repetitions per factor combination.}
 
 \item{sig2t}{General variance \eqn{\sigma^2}}
 
@@ -47,7 +47,9 @@ A list containing the following elements: \cr\cr
 \code{SST} - The list of matrices \eqn{[S_1 ,.., S_p]}, \eqn{S_i} is of size \eqn{m_i \times m_i}. \cr\cr
 }
 \description{
-Diagonal Data generation
+Generates a TANOVA balanced design, where each covariate \eqn{X_i} is an 
+indicator tensor with 1 at one position and zeroes everywhere else. Here, 
+null hypothesis of equality of groups is true for all factor combinations.
 }
 \examples{
 # Tensor-on-Tensor Regression on 6x7x8x9 responses and 3x4x5 covariates
@@ -64,8 +66,14 @@ print(dim(dat$Yall))
 print(dim(dat$SST[[1]]))
 }
 \references{
-\url{https://arxiv.org/abs/2012.10249}
+Llosa-Vite, C., & Maitra, R. (2022). 
+  \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+  \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.
 }
 \author{
 Carlos Llosa-Vite, \email{llosacarlos2@gmail.com}
+
+Subrata Pal, \email{SubrataluPal@gmail.com}
+
+Ranjan Maitra, \email{maitra@iastate.edu}
 }

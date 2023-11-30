@@ -45,6 +45,7 @@
 #' and you still want to specify the ARMA orders,
 #' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
+#' @param retB Return the dense tensor B of low rank? 
 #' @return A list containing the following elements: \cr\cr
 #' \code{B} -  the estimated coefficient B. \cr\cr
 #' \code{Tucker} - A list containing the estimated tensor V, along with the estimated \eqn{L_1 ,.., L_l}
@@ -79,12 +80,14 @@
 #' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
+#' @author Ranjan Maitra, \email{maitra@@iastate.edu}
 #' @references Llosa-Vite, C., & Maitra, R. (2022). 
 #'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
-#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#'   \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.  
 #' 
 #' @import tensorA
-TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs = "N", arma_param = NULL){
+TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs = "N", arma_param = NULL, retB = T){
   #setting up dimensions
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
@@ -273,11 +276,13 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   for( k in (1:p)[!(1:p %in% idenM)] ) # for k not in idenM
     V <- matmult_kdim(V,Stypa[[k]]$sqr,names(ms)[k])
 
-
-  B <- V
-  for(i in idenL) B <- B %e% Ls[[i]]
-  for(i in idenM) B <- B %e% Ms[[i]]
-  B <- reorder.tensor(B,order(names(B),names(c(hs,ms))))
+  
+  if(retB) {
+    B <- V
+    for(i in idenL) B <- B %e% Ls[[i]]
+    for(i in idenM) B <- B %e% Ms[[i]]
+    B <- reorder.tensor(B,order(names(B),names(c(hs,ms))))
+  }
 
   Ls[idenL] <- lapply(Ls[idenL],qr) #do the QR trick to all except the ones that are identity
   #V <- aperm(V,c((p+1):(l+p),1:p))
@@ -297,7 +302,8 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   Tucker = list(V=V,Ls=Ls,Ms=Ms)
   covs <- lapply(Stypa,function(x)x$orig)
   allik <- -mn*(1+log(2*pi)+allik)/2
-  toret <- list( B = B, Tucker = Tucker, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j1)
+  toret <- list(Tucker = Tucker, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j1)
+  if(retB) toret$B <- B
   return(toret)
 }
 

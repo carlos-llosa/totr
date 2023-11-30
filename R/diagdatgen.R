@@ -51,10 +51,11 @@
 #' print(dim(dat$Yall))
 #' print(dim(dat$SST[[1]]))
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
-#' @author Subrata Pal, \email{subrata@@iastate.edu}
+#' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
+#' @author Ranjan Maitra, \email{maitra@@iastate.edu}
 #' @references Llosa-Vite, C., & Maitra, R. (2022). 
 #'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
-#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#'   \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.  
 #' 
 diagdat_sim <- function(msT, hsT, bt, nn, sig2t, corrs, 
                         arma_param = NULL, covars = NULL){

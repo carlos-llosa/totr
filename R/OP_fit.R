@@ -42,6 +42,7 @@
 #' and you still want to specify the ARMA orders,
 #' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
+#' @param retB Return the dense tensor B of low rank? 
 #' @return A list containing the following elements: \cr\cr
 #' \code{B} -  the estimated coefficient B. \cr\cr
 #' \code{OP} - A list with the estimated \eqn{M_1 ,.., M_p}.\cr\cr
@@ -73,11 +74,13 @@
 #' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
+#' @author Ranjan Maitra, \email{maitra@@iastate.edu}
 #' @references Llosa-Vite, C., & Maitra, R. (2022). 
 #'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
-#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#'   \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.  
 #' 
-OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", arma_param = NULL){
+OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", arma_param = NULL, retB = T){
   #setting up dimensions
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
@@ -186,8 +189,12 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", ar
     } else prev <- conv
   }
   allik <- -mn*(1+log(2*pi)+allik)/2
-  B <- aperm(Reduce("%o%",Ms),c(2*(1:p),2*(1:p)-1))
+  if(retB) {
+    B <- array(0,c(hs,ms))
+    for(r in 1:R) B <- B + Reduce("%o%",lapply(Ls,function(x)x[,r])) %o% Reduce("%o%",lapply(Ms,function(x)x[,r]))
+  }
   covs <- lapply(Stypa,function(x)x$orig)
-  toret <- list( B = B, OP = Ms, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j)
+  toret <- list(OP = Ms, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j)
+  if(retB) toret$B <- B
   return(toret)
 }

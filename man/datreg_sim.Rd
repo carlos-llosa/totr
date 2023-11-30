@@ -65,11 +65,17 @@ dim(dat$Yall)
 dim(dat$SST[[1]])
 }
 \references{
-\url{https://arxiv.org/abs/2012.10249}
+Llosa-Vite, C., & Maitra, R. (2022). 
+  \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+  \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.
 }
 \seealso{
 \code{\link{diagdat_sim}}
 }
 \author{
+Carlos Llosa-Vite, \email{llosacarlos2@gmail.com}
+
 Subrata Pal, \email{SubrataluPal@gmail.com}
+
+Ranjan Maitra, \email{maitra@iastate.edu}
 }

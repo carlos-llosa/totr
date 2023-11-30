@@ -43,6 +43,7 @@
 #' and you still want to specify the ARMA orders,
 #' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
+#' @param retB Return the dense tensor B of low rank? 
 #' @return A list containing the following elements: \cr\cr
 #' \code{B} -  the estimated coefficient B. \cr\cr
 #' \code{TR} - A list containing the estimated \eqn{L_1 ,.., L_l} in the list \code{Ls} and
@@ -77,11 +78,13 @@
 #' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
+#' @author Ranjan Maitra, \email{maitra@@iastate.edu}
 #' @references Llosa-Vite, C., & Maitra, R. (2022). 
 #'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
-#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#'   \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.  
 #' @import tensorA
-TR_normal <- function(Yall,Xall,g,it = 100,init = NULL, err = 1e-7,corrs = "N", arma_param = NULL){
+TR_normal <- function(Yall,Xall,g,it = 100,init = NULL, err = 1e-7,corrs = "N", arma_param = NULL, retB = T){
   #setting up dimensions
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
@@ -249,10 +252,12 @@ TR_normal <- function(Yall,Xall,g,it = 100,init = NULL, err = 1e-7,corrs = "N", 
       break
     } else prev <- conv
   }
-  B <- Reduce("%e%",Ls) %e% Reduce("%e%",Ms)
+  if(retB) {
+    B <- Reduce("%e%",Ls) %e% Reduce("%e%",Ms)
+    B <- tarray(B)
+  }
 
   #turn into arrays and aperm
-  B <- tarray(B)
   Ls <- lapply(Ls,function(x) aperm(tarray(x),c(2,1,3)))
   Ms <- lapply(Ms,function(x) aperm(tarray(x),c(2,1,3)))
 
@@ -260,7 +265,8 @@ TR_normal <- function(Yall,Xall,g,it = 100,init = NULL, err = 1e-7,corrs = "N", 
   TR = list(Ls=Ls,Ms=Ms)
   covs = lapply(Stypa,function(x)x$orig)
   allik <- -mn*(1+log(2*pi)+allik)/2
-  toret <- list( B = B, TR = TR, allik=allik,sig2=sig2 ,covs = covs, allconv = allconv,it = j)
+  toret <- list(TR = TR, allik=allik,sig2=sig2 ,covs = covs, allconv = allconv,it = j)
+  if(retB) toret$B <- B
   return(toret)
 }
 

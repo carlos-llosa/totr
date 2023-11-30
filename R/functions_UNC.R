@@ -23,8 +23,18 @@
 #' The last dimension must match the last dimension of Yall.
 #' @param it maximum number of iterations.
 #' @param err relative error used to assess convergence.
-#' @param corrs Character vector of size p indicating the types of covariance matrices desired for S_1 ,.., S_p.
-#' CHANGE THIS ONE!!
+#' @param corrs Character vector of size p indicating the types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
+#' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
+#' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
+#' "N" for general covariance with element (1,1) equal to 1.
+#' If corrs is of size 1, then \eqn{S_1 ,.., S_p} will all have the same correlation structure.
+#' @param arma_param A list of size \code{length(dim(Yall))}, each of which contains the
+#' ARMA parameter orders (p, q) for that corresponding mode.
+#' p is the AR parameter order and q is the MA parameter order
+#' If some other mode has some other kind of correlation structure
+#' and you still want to specify the ARMA orders,
+#' you can input a list of size p with other cases as NULL.
+#' The default ARMA order is (1, 1).
 #' @return A list containing the following elements: \cr\cr
 #' \code{B} -  the estimated coefficient B. \cr\cr
 #' \code{sig2} - the estimate of \eqn{\sigma^2}. \cr\cr
@@ -56,8 +66,11 @@
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
 #' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
-#' @references \url{https://arxiv.org/abs/2012.10249}
-ToT_unformat <- function(Yall,Xall,it = 100,corrs = "N",err = 1e-8){
+#' @author Ranjan Maitra, \email{maitra@@iastate.edu}
+#' @references Llosa-Vite, C., & Maitra, R. (2022). 
+#'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+#'   \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.  
+ToT_unformat <- function(Yall,Xall,it = 100,corrs = "N",err = 1e-8, arma_param = NULL){
   p <- length(dim(Yall))-1
   l <- length(dim(Xall))-1
   n <- dim(Yall)[p+1]
@@ -69,7 +82,7 @@ ToT_unformat <- function(Yall,Xall,it = 100,corrs = "N",err = 1e-8){
   B <- aperm(B,c(p+1,1:p))
   dim(B) <- c(hs,ms)
   res <- amprod(Yall,diag(n) - tcrossprod(sol$v),p+1)
-  fit1 <- MLE_tensnorm(res,it = it,corrs = corrs,err =err)   
+  fit1 <- MLE_tensnorm(res,it = it,corrs = corrs,err =err, arma_param = NULL)   
   # CHECK: In the comment for this function, it is written #MLE algorithm with covariances set to AR(1) autocorrelations 
   # Then how can it accomodate other type cvariates???
   # It seems that MLE_transform has all the cases. Still check!

@@ -42,6 +42,7 @@
 #' and you still want to specify the ARMA orders,
 #' you can input a list of size p with other cases as NULL.
 #' The default ARMA order is (1, 1).
+#' @param retB Return the dense tensor B of low rank? 
 #' @return A list containing the following elements: \cr\cr
 #' \code{B} -  the estimated coefficient B. \cr\cr
 #' \code{P} - A list with the estimated \eqn{L_1 ,.., L_l} in the list \code{Ls} and estimated \eqn{M_1 ,.., M_p} in the list \code{Ms}.\cr\cr
@@ -77,12 +78,14 @@
 #' colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 #' covars
 #' @author Carlos Llosa-Vite, \email{llosacarlos2@@gmail.com}
+#' @author Subrata Pal, \email{SubrataluPal@@gmail.com}
+#' @author Ranjan Maitra, \email{maitra@@iastate.edu}
 #' @references Llosa-Vite, C., & Maitra, R. (2022). 
 #'   \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
-#'   \emph{IEEE TPAMI}, 45(2), 2282 - 2296.  
+#'   \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.  
 #' 
 CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
-                      corrs = "N", arma_param = NULL) {
+                      corrs = "N", arma_param = NULL, retB = T) {
 
   #setting up dimensions
   p <- length(dim(Yall))-1
@@ -275,8 +278,10 @@ CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
     } else prev <- conv
   }
   #create tensor B, with all Ms and Ls unit column norms, and norms in lam
-  B <- array(0,c(hs,ms))
-  for(r in 1:R) B <- B + Reduce("%o%",lapply(Ls,function(x)x[,r])) %o% Reduce("%o%",lapply(Ms,function(x)x[,r]))
+  if(retB) {
+    B <- array(0,c(hs,ms))
+    for(r in 1:R) B <- B + Reduce("%o%",lapply(Ls,function(x)x[,r])) %o% Reduce("%o%",lapply(Ms,function(x)x[,r]))
+  }
   lam <- apply(Ls[[l]],2,norm)
   Ls[[l]] <- normalize(Ls[[l]])
   #set to descending order in norms (in lam)
@@ -288,7 +293,8 @@ CP_normal <- function(Yall, Xall, R, it = 100, err = 1e-8, init = NULL,
   CP = list(lam=lam,Ls=Ls,Ms=Ms)
   covs = lapply(STTs,function(x)x$orig)
   allik <- -mn*(1+log(2*pi)+allik)/2
-  toret <- list( B = B, CP = CP, sig2=sig2 ,covs = covs, allconv = allconv,it = j,allik=allik)
+  toret <- list(CP = CP, sig2=sig2 ,covs = covs, allconv = allconv,it = j,allik=allik)
+  if(retB) toret$B <- B
   return(toret)
 }
 

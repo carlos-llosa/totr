@@ -11,7 +11,8 @@ OP_normal(
   err = 1e-07,
   init = NULL,
   corrs = "N",
-  arma_param = NULL
+  arma_param = NULL,
+  retB = T
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ If some other mode has some other kind of correlation structure
 and you still want to specify the ARMA orders,
 you can input a list of size p with other cases as NULL.
 The default ARMA order is (1, 1).}
+
+\item{retB}{Return the dense tensor B of low rank?}
 }
 \value{
 A list containing the following elements: \cr\cr
@@ -98,8 +101,14 @@ colnames(covars) <- c("sig2",paste0("S-",Rcorrs))
 covars
 }
 \references{
-\url{https://arxiv.org/abs/2012.10249}
+Llosa-Vite, C., & Maitra, R. (2022). 
+  \href{https://doi.org/10.1109/TPAMI.2022.3164836}{Reduced-Rank Tensor-on-Tensor Regression and Tensor-variate Analysis of Variance}
+  \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45(2), 2282 - 2296.
 }
 \author{
 Carlos Llosa-Vite, \email{llosacarlos2@gmail.com}
+
+Subrata Pal, \email{SubrataluPal@gmail.com}
+
+Ranjan Maitra, \email{maitra@iastate.edu}
 }
