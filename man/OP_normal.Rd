@@ -11,8 +11,7 @@ OP_normal(
   err = 1e-07,
   init = NULL,
   corrs = "N",
-  arma_param = NULL,
-  retB = T
+  arma_param = NULL
 )
 }
 \arguments{
@@ -45,8 +44,6 @@ If some other mode has some other kind of correlation structure
 and you still want to specify the ARMA orders,
 you can input a list of size p with other cases as NULL.
 The default ARMA order is (1, 1).}
-
-\item{retB}{Return the dense tensor B of low rank?}
 }
 \value{
 A list containing the following elements: \cr\cr
@@ -91,7 +88,7 @@ dat <- diagdat_sim(msT=RmsT,hsT=RhsT,bt=Rbt,nn=Rnn,sig2t=Rsig2t,corrs=Rcorrs)
 dim(dat$Xall) <- c(1,dim(dat$Xall))
 fit <- OP_normal(Yall = dat$Yall,Xall = dat$Xall,corrs = Rcorrs)
 par(mfrow = c(1,2))
-hist(fit$B,main = "estimates in B (true in blue)")
+hist(Reduce("\%o\%",fit$OP),main = "estimates in B (true in blue)")
 abline(v= Rbt,col = "blue",lwd=3)
 plot(ts(fit$allik),main = "loglikelihood")
 par(mfrow = c(1,1))
