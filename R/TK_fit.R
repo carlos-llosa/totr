@@ -283,7 +283,7 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
     for(i in idenM) B <- B %e% Ms[[i]]
     B <- reorder.tensor(B,order(names(B),names(c(hs,ms))))
   }
-  Tucker_orig <- list(V=V,Ls=Ls,Ms=Ms)
+  # Tucker_orig <- list(V=V,Ls=Ls,Ms=Ms)  ## For DEBUG purposes only
   Ls_dims <- list()
   for(i in idenL) {
     Ls_dims[[i]] <- names(dim(Ls[[i]]))
@@ -292,7 +292,9 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
 
   Ls[idenL] <- lapply(Ls[idenL],qr) #do the QR trick to all except the ones that are identity
   #V <- aperm(V,c((p+1):(l+p),1:p))
-  # for(i in idenL) V <- matmult_kdim(V, qr.Q(Ls[[i]]), names(pdimsL)[i])  ## Subrata -- this changes rank of V: might be qr.R (or qr.X?)?
+  
+  # for(i in idenL) V <- matmult_kdim(V, qr.Q(Ls[[i]]), names(pdimsL)[i])  
+  ## Subrata -- this changes rank of V: had some problem in final rotation
   for(i in idenL) {
     V <- V %e% qr.R(Ls[[i]])
   }
@@ -301,7 +303,7 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   #reorder the dimensions of V
   names(pdimsM)[(1:p)[!(1:p %in% idenM)]] <- names(ms)[(1:p)[!(1:p %in% idenM)]]
   
-  ## CHANGES:
+  ## Following fixes:
   dimV <- names(dim(V))
   dimV <- sub("^l", "gl", dimV)
   names(dim(V)) <- dimV
@@ -310,7 +312,6 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
     names(dim(Ls[[i]])) <- Ls_dims[[i]]
     Ls[[i]] <- as.tensor(Ls[[i]])
   }
-  
   ## Keeping them as tensors for now for predict function
   # #turn into arrays
   # V <- tarray(V)
@@ -321,7 +322,7 @@ TK_normal <- function( Yall, Xall, pdims, it = 100, err = 1e-7,init = NULL,corrs
   Tucker = list(V=V,Ls=Ls,Ms=Ms)
   covs <- lapply(Stypa,function(x)x$orig)
   allik <- -mn*(1+log(2*pi)+allik)/2
-  toret <- list(Tucker_orig = Tucker_orig, Tucker = Tucker, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j1)
+  toret <- list(Tucker = Tucker, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j1)
   if(retB) toret$B <- B
   return(toret)
 }
