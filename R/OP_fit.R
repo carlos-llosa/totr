@@ -31,8 +31,8 @@
 #' If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
 #' and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.
 #' @param corrs Character vector of size p indicating the types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
-#' Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
-#' AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
+#' Options are "independent", "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
+#' identity, AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 #' "N" for general covariance with element (1,1) equal to 1.
 #' If corrs is of size 1, then \eqn{S_1 ,.., S_p} will all have the same correlation structure.
 #' @param arma_param A list of size \code{length(dim(Yall))}, each of which contains the
@@ -88,6 +88,11 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", ar
 
   #setting up correlations types
   if(length(corrs) == 1) corrs <- rep(corrs,p)
+  
+  if (all(corrs == "independent")) {
+    return(OP_normal_indep(Yall, Xall, it = it, err = err, init = init))
+  }
+  
   Sgen <- as.list(1:p)
   if_arma <- rep(FALSE, p)
   if (is.null(arma_param)) arma_param <- as.list(rep(NA,p))
@@ -191,5 +196,116 @@ OP_normal <- function(Yall,Xall,it = 100, err = 1e-7,init = NULL,corrs = "N", ar
   
   covs <- lapply(Stypa,function(x)x$orig)
   toret <- list(OP = Ms, sig2=sig2 ,covs = covs, allconv = allconv,allik=allik,it = j)
+  return(toret)
+}
+
+
+#' Tensor-on-Tensor Regression with Independent Errors and OP Format Coefficient
+#'
+#' Tensor-on-tensor regression
+#' \eqn{Y_i = < X_i | B > + E_i}\cr
+#' with independent errors
+#' \eqn{Var(vec(E_i)) = \sigma^2 I}
+#' and OP-formatted
+#' \eqn{B = o[[  M_1 ,..., M_p ]]}.\cr
+#'
+#' This is a specialized faster version of \code{OP_normal()} for the case
+#' where all response-mode covariance factors are identity matrices.
+#'
+#' @param Yall Array containing the n tensor responses along the last mode.
+#' @param Xall Array containing the n tensor covariates along the last mode.
+#' @param it Maximum number of iterations.
+#' @param err Relative error used to assess convergence.
+#' @param init List containing initial values. If supplied, \code{init$OP}
+#'   is used. Optionally, \code{init$sig2} may be used.
+#'
+#' @return A list containing:
+#' \code{OP}, \code{sig2}, \code{covs}, \code{allconv}, \code{allik}, and \code{it}.
+#' @export
+OP_normal_indep <- function(Yall, Xall, it = 100, err = 1e-7, init = NULL) {
+  
+  # setting up dimensions
+  p <- length(dim(Yall)) - 1
+  l <- length(dim(Xall)) - 1
+  if (dim(Xall)[l + 1] != dim(Yall)[p + 1]) {
+    stop("sample size of X and Y do not match")
+  }
+  n <- dim(Yall)[p + 1]
+  
+  # setting up dimensions (important for tensor algebra)
+  mdims <- dim(Yall)
+  names(mdims) <- c(paste0("m", 1:p), "n")
+  ms <- mdims[1:p]
+  
+  ldims <- dim(Xall)
+  names(ldims) <- c(paste0("l", 1:l), "n")
+  hs <- ldims[1:l]
+  
+  mn <- prod(dim(Yall))
+  
+  # initial values for OP component
+  if (is.null(init) || is.null(init$OP)) {
+    Ms <- lapply(1:p, function(i) {
+      M <- matrix(runif(ms[i] * hs[i]), ms[i])
+      M / norm(M)
+    })
+  } else {
+    Ms <- init$OP
+  }
+  
+  # initial sigma^2
+  if (!is.null(init) && !is.null(init$sig2)) {
+    sig2 <- init$sig2
+  } else if (!is.null(init) && !is.null(init$covs) && !is.null(init$covs$sig2)) {
+    sig2 <- init$covs$sig2
+  } else {
+    sig2 <- mean(Yall^2)
+  }
+  
+  prev <- 1
+  allconv <- NULL
+  allik <- NULL
+  
+  for (j in 1:it) {
+    
+    for (k in 1:p) {
+      Xd <- mat(tprod(Xall, Ms, c(1:p)[-k]), k)
+      Xd2 <- tcrossprod(Xd)
+      Yd <- mat(Yall, k)
+      
+      M <- Yd %*% t(Xd) %*% ginvS(Xd2)
+      
+      if (k != p) {
+        M <- M / norm(M)
+      }
+      Ms[[k]] <- M
+    }
+    
+    # compute residual-based sigma^2
+    Bhat <- Reduce("%o%", Ms)
+    fit <- tprod(Xall, Ms, 1:p)
+    res <- Yall - fit
+    sig2 <- sum(res^2) / mn
+    
+    if (!is.finite(sig2) || sig2 <= 0) {
+      sig2 <- .Machine$double.eps
+    }
+    
+    # convergence
+    normB <- prod(sapply(Ms, norm)) / sqrt(prod(c(hs, ms)))
+    conv <- normB + sqrt(sig2)
+    
+    allconv <- c(allconv, conv)
+    allik <- c(allik, -mn * (1 + log(2 * pi * sig2)) / 2)
+    
+    if (abs((conv - prev) / prev) < err) {
+      break
+    } else {
+      prev <- conv
+    }
+  }
+  
+  covs <- lapply(ms, function(m) diag(m))
+  toret <- list(OP = Ms, sig2 = sig2, covs = covs, allconv = allconv, allik = allik, it = j)
   return(toret)
 }

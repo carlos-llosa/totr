@@ -29,15 +29,15 @@ The last dimension must match the last dimension of Yall.}
 
 \item{err}{relative error used to assess convergence.}
 
-\item{init}{list containing initial values. init$covssig2 contains the initial value of \eqn{\sigma^2}, init$covs$covs is a list of p matrices
-containing initial values for \eqn{S_1 ,.., S_p}, init$TK$Ls is a list of l matrices containing the initial values for \eqn{L_1 ,..,L_l}, and
-init$TK$Ms is a list of p matrices containing the initial values for \eqn{M_1 ,..,M_p}.
+\item{init}{list containing initial values. init$covs$sig2 contains the initial value of \eqn{\sigma^2}, init$covs$covs is a list of p matrices
+containing initial values for \eqn{S_1 ,.., S_p}, init$CP$Ls is a list of l matrices containing the initial values for \eqn{L_1 ,..,L_l}, and
+init$CP$Ms is a list of p matrices containing the initial values for \eqn{M_1 ,..,M_p}.
 If init = NULL then the elements in init$covs will be initiated from the TVN model fitted on the unconstrained B residuals
-and init$Ls, init$Ms will contain elements generated randomly from the uniform(0,1) distribution.}
+and init$CP$Ls, init$CP$Ms will contain elements generated randomly from the uniform(0,1) distribution.}
 
 \item{corrs}{Character vector of size p indicating the types of covariance matrices desired for \eqn{S_1 ,.., S_p}.
-Options are "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
-AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
+Options are "independent" "AR(1)", "MA(1)", "ARMA"/"ARMA(p,q)"/"ARMA(p, q)", "EQC"  for
+Identity, AR(1), MA(1), ARMA(p, q) and equivariance correlation matrices, and
 "N" for general covariance with element (1,1) equal to 1.
 If corrs is of size 1, then \eqn{S_1 ,.., S_p} will all have the same correlation structure.}
 
@@ -54,7 +54,7 @@ The default ARMA order is (1, 1).}
 \value{
 A list containing the following elements: \cr\cr
 \code{B} -  the estimated coefficient B. \cr\cr
-\code{P} - A list with the estimated \eqn{L_1 ,.., L_l} in the list \code{Ls} and estimated \eqn{M_1 ,.., M_p} in the list \code{Ms}.\cr\cr
+\code{CP} - A list with the estimated \eqn{L_1 ,.., L_l} in the list \code{Ls} and estimated \eqn{M_1 ,.., M_p} in the list \code{Ms}.\cr\cr
 \code{sig2} - the estimate of \eqn{\sigma^2}. \cr\cr
 \code{covs} - a list with the estimated matrices \eqn{S_1 ,.., S_p}. \cr\cr
 \code{allconv} - a vector with all the convergence criteria. \cr\cr
@@ -64,7 +64,7 @@ A list containing the following elements: \cr\cr
 \description{
 Tensor-on-tensor regression
 \eqn{Y_i = < X_i | B > + E_i}\cr
-with kronecker-separable covariance
+with Kronecker-separable covariance
 \eqn{Var(vec(E_i)) = \sigma^2 \otimes_k S_k}
 and CP-formatted
 \eqn{B = [[  L_1 ,.., L_l , M_1 ,..., M_p ]]}.\cr
