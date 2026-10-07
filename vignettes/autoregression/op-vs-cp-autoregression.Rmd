@@ -1,0 +1,299 @@
+---
+title: "Fitting Tensor Autoregression Models with ToTR"
+output: html_document
+bibliography: references.bib
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(totr)
+```
+
+# Introduction
+
+This vignette demonstrates how to fit tensor autoregression models using the `totr` package under two coefficient structures:
+  
+  - **OP**: outer-product coefficient format (see [@totr] and [@hoff])
+  - **CP**: CANDECOMP/PARAFAC coefficient format (see [@totr] and [@lock])
+  
+The data we will use corresponds to a 4-way tensor time series of dimensions
+
+\[
+  25 \times 25 \times 4 \times 548,
+  \]
+
+where the modes represent:
+  
+  - 25 sender countries,
+  - 25 receiver countries,
+  - 4 CAMEO event category,
+  - 548 weeks (between 2004-2014).
+  
+The data file `icews_tensor_data.tns`:
+
+  - stores this tensor time series data in a sparse tensor `.tns` format [@pyttb]
+  - was generated as part of the gtotr python package [@gtotr]
+  - was used in the ptotr manuscript [@ptotr]
+  - was generated exactly as described in [@hoff]
+  
+Below we read the data.
+  
+```{r}
+read_sptensor_toarray <- function(filename) {
+  lines <- readLines(filename)
+  dims <- as.integer(strsplit(trimws(lines[3]), "\\s+")[[1]])
+  dat  <- read.table(text = lines[-(1:4)], header = FALSE)
+  arr <- array(0, dim = dims)
+  arr[as.matrix(dat[, 1:4])] <- dat[, 5]
+  arr
+}
+
+Z <- read_sptensor_toarray("icews_tensor_data.tns")
+```
+
+
+This example illustrates:
+  
+  - how to construct tensor autoregression inputs from the raw data,
+  - how to fit OP and CP tensor-on-tensor regression models,
+  - how to compare fitted models using loglikelihood and BIC.
+
+# Constructing the autoregression tensors
+
+From the tensor time series `Z` constructed above, we construct an autoregression in which the predictors `X`
+include:
+  
+  1. the lag-1 tensor (1-week dependence),
+  2. the average of lags 2 through 5 (1-month dependence),
+  3. an intercept channel (mean trend).
+
+The response `Y` is the tensor at the next week.
+
+```{r build-data}
+X <- array(0, c(25, 25, 9, 543))
+X[, , 1:4, ] <- Z[, , , 5:547]  # lag 1
+X[, , 5:8, ] <- (
+  Z[, , , 1:543] +
+    Z[, , , 2:544] +
+    Z[, , , 3:545] +
+    Z[, , , 4:546]
+) / 4                            # average of lags 2 through 5
+X[, , 9, ] <- 1                 # intercept channel
+
+Y <- Z[, , , 6:548]
+
+dim(X)
+dim(Y)
+```
+
+The predictor tensor `X` has dimensions
+
+\[
+  25 \times 25 \times 9 \times 543,
+  \]
+
+and the response tensor `Y` has dimensions
+
+\[
+  25 \times 25 \times 4 \times 543.
+  \]
+
+# OP tensor autoregression models
+
+OP ties one predictor mode to one response mode, so permuting modes changes the separability assumption. Therefore, for OP regression, different permutations of the predictor modes produce different models. Since `X` has three modes, there are \(3! = 6\) possible permutations.
+
+For simplicity, in all fits below we use the independent-error covariance structure by setting `corrs = "independent"`. We will also run multiple initializations because of the non-convexity of the objective.
+
+```{r op-fits}
+perms <- rbind(
+  c(1, 2, 3),
+  c(1, 3, 2),
+  c(2, 1, 3),
+  c(2, 3, 1),
+  c(3, 1, 2),
+  c(3, 2, 1)
+)
+
+op_res <- vector("list", nrow(perms))
+n <- dim(Y)[4]
+nit <- 100
+ninit <- 10
+
+set.seed(0)
+for (i in 1:nrow(perms)) {
+  perm <- perms[i, ]
+  Xp <- aperm(X, c(perm, 4))
+
+  best_fit <- NULL
+  best_ll <- -Inf
+  best_j <- NA_integer_
+
+  for (jj in 1:ninit) {
+    fit_try <- OP_normal(
+      Yall = Y,
+      Xall = Xp,
+      it = nit,
+      corrs = "independent"
+    )
+
+    ll_try <- tail(fit_try$allik, 1)
+
+    if (ll_try > best_ll) {
+      best_ll <- ll_try
+      best_fit <- fit_try
+      best_j <- jj
+    }
+  }
+
+  hs <- dim(Xp)[1:3]
+  ms <- dim(Y)[1:3]
+
+  op_res[[i]] <- data.frame(
+    model = "OP",
+    permutation = paste(perm, collapse = "-"),
+    rank = NA,
+    loglik = best_ll,
+    npar = sum(hs * ms - 1) + 2,
+    init_best = best_j,
+    stringsAsFactors = FALSE
+  )
+}
+
+op_res <- do.call(rbind, op_res)
+op_res$bic <- -2 * op_res$loglik + log(n) * op_res$npar
+write.csv(op_res, file = "op_res.csv", row.names = FALSE)
+
+op_res
+```
+
+The OP parameter count used here is
+
+\[
+  \sum_k (h_k m_k - 1) + 2,
+  \]
+
+where one degree of freedom is removed for proportional indeterminacy and the additional 2 accounts for the remaining scale term and \(\sigma^2\).
+
+# CP tensor autoregression models
+
+We now fit CP tensor autoregression models over a range of ranks.
+
+```{r cp-fits}
+cp_ranks <- 1:30
+cp_res <- vector("list", length(cp_ranks))
+
+hs <- dim(X)[1:3]
+ms <- dim(Y)[1:3]
+
+set.seed(0)
+for (ii in seq_along(cp_ranks)) {
+  R <- cp_ranks[ii]
+
+  best_fit <- NULL
+  best_ll <- -Inf
+  best_j <- NA_integer_
+
+  for (jj in 1:ninit) {
+    fit_try <- CP_normal(
+      Yall = Y,
+      Xall = X,
+      R = R,
+      it = nit,
+      corrs = "independent"
+    )
+
+    ll_try <- tail(fit_try$allik, 1)
+
+    if (ll_try > best_ll) {
+      best_ll <- ll_try
+      best_fit <- fit_try
+      best_j <- jj
+    }
+  }
+
+  cp_res[[ii]] <- data.frame(
+    model = "CP",
+    permutation = NA,
+    rank = R,
+    loglik = best_ll,
+    npar = R * (sum(hs - 1) + sum(ms - 1) + 1) + 1,
+    init_best = best_j,
+    stringsAsFactors = FALSE
+  )
+}
+
+cp_res <- do.call(rbind, cp_res)
+cp_res$bic <- -2 * cp_res$loglik + log(n) * cp_res$npar
+write.csv(cp_res, file = "cp_res.csv", row.names = FALSE)
+
+cp_res
+```
+
+The CP parameter count used here is
+
+\[
+  R \left( \sum_k (h_k - 1) + \sum_k (m_k - 1) + 1 \right) + 1,
+  \]
+
+where the reduction by 1 per factor reflects proportional indeterminacy, the term inside the parentheses includes one component weight per rank, and the final \(+1\) accounts for \(\sigma^2\).
+
+# Comparing OP and CP fits
+
+We can combine the fitted OP and CP summaries into a single table.
+
+```{r combine-results}
+res <- rbind(cp_res, op_res)
+res[order(res$bic), ]
+```
+
+This table provides, for each fitted model:
+  
+  - the model type,
+  - the permutation used for OP fits,
+  - the rank used for CP fits,
+  - the fitted loglikelihood,
+  - the number of free parameters,
+  - the resulting BIC.
+  
+```{r bic-plot}
+plot(cp_res$rank, cp_res$bic,
+     type = "b", pch = 19, lwd = 2,
+     xlab = "CP rank", ylab = "BIC",
+     main = "BIC comparison of CP and OP tensor autoregression")
+
+abline(h = op_res$bic, lty = 2, col = "gray50")
+
+legend("topright",
+       legend = c("CP", "OP permutations"),
+       lty = c(1, 2),
+       pch = c(19, NA),
+       col = c("black", "gray50"),
+       bty = "n")
+```
+
+# Remarks
+
+This example shows how `totr` can be used for autoregressive modeling of tensor time series under different coefficient structures.
+
+- **OP models** impose a fully separable coefficient structure.
+- **CP models** allow sums of separable components and therefore offer greater flexibility as rank increases.
+
+The BIC comparison provides a practical way to balance model fit and complexity when comparing these structured tensor regression models.
+
+In particular, among the six OP models, higher parameter counts are associated with lower BIC values, suggesting that the fully separable structure may be too restrictive for these data. In contrast, the CP model includes a rank parameter that provides a flexible tradeoff between fit and complexity. Larger CP ranks generally improve the fit, but the incremental improvement in BIC diminishes as the rank increases.
+
+```{r bic-plot2}
+plot(op_res$bic, op_res$npar,
+     xlab = "BIC",
+     ylab = "Number of parameters",
+     pch = 19,
+     main = "OP models: BIC vs number of parameters")
+abline(lm(npar ~ bic, data = op_res), col = "red", lwd = 2)
+```
+
+# References
+
